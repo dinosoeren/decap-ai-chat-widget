@@ -379,8 +379,15 @@
   cursor: not-allowed;
 }
 
-.clear-cache-button {
-  background: #dc3545;
+.cache-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.clear-cache-button,
+.clear-chat-cache-button {
+  background: #6c757d;
   color: white;
   border: none;
   padding: 6px 12px;
@@ -389,17 +396,26 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-top: 8px;
-  width: 100%;
+  flex: 1;
 }
 
-.clear-cache-button:hover:not(:disabled) {
-  background: #c82333;
+.clear-cache-button:hover:not(:disabled),
+.clear-chat-cache-button:hover:not(:disabled) {
+  background: #5a6268;
 }
 
-.clear-cache-button:disabled {
-  background: #ccc;
+.clear-cache-button:disabled,
+.clear-chat-cache-button:disabled {
+  background: #adb5bd;
   cursor: not-allowed;
+}
+
+.clear-chat-cache-button {
+  background: #dc3545;
+}
+
+.clear-chat-cache-button:hover:not(:disabled) {
+  background: #c82333;
 }
 
 /* Preview Styles */

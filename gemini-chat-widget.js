@@ -18,6 +18,7 @@
     POST_CONTENT_GITHUB: "gemini_chat_post_content_github_",
     POST_CONTENT_SITEMAP: "gemini_chat_post_content_sitemap_",
     CACHE_TIMESTAMP: "gemini_chat_cache_timestamp",
+    CHAT_RESPONSES: "gemini_chat_responses_",
   };
 
   // Cache utility functions
@@ -103,30 +104,96 @@
     }
   }
 
-  function clearCache() {
+  // Clear all post list and content cache entries from Github API and sitemap
+  function clearPostsCache() {
     try {
-      // Clear all cache keys
-      Object.values(CACHE_KEYS).forEach((key) => {
-        if (!key.includes("POST_CONTENT")) {
-          localStorage.removeItem(key);
-        }
-      });
-
-      // Clear all post content cache entries
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (
           key &&
-          (key.startsWith(CACHE_KEYS.POST_CONTENT_GITHUB) ||
+          (key.startsWith(CACHE_KEYS.POSTS_LIST_GITHUB) ||
+            key.startsWith(CACHE_KEYS.POSTS_LIST_SITEMAP) ||
+            key.startsWith(CACHE_KEYS.POST_CONTENT_GITHUB) ||
             key.startsWith(CACHE_KEYS.POST_CONTENT_SITEMAP))
         ) {
           keysToRemove.push(key);
         }
       }
       keysToRemove.forEach((key) => localStorage.removeItem(key));
+      console.log("Posts cache cleared");
     } catch (error) {
       console.warn("Failed to clear cache:", error);
+    }
+  }
+
+  // Clear all Gemini chat responses across all posts
+  function clearAllChatResponseCaches() {
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(CACHE_KEYS.CHAT_RESPONSES)) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+      console.log("Cleared all chat response caches");
+    } catch (error) {
+      console.warn("Failed to clear chat response caches:", error);
+    }
+  }
+
+  // Chat response caching functions
+  function getCurrentPostKey() {
+    try {
+      // Extract post identifier from URL
+      const url = window.location.href;
+      const match = url.match(/\/entries\/([^\/]+)\/index/);
+      if (match) {
+        return match[1]; // Returns the post name (e.g., "ai-block-plan")
+      }
+      return null;
+    } catch (error) {
+      console.warn("Failed to get current post key:", error);
+      return null;
+    }
+  }
+
+  function getCachedChatResponses(postKey) {
+    try {
+      if (!postKey) return null;
+      const key = CACHE_KEYS.CHAT_RESPONSES + postKey;
+      const cached = localStorage.getItem(key);
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.warn("Failed to get cached chat responses:", error);
+      return null;
+    }
+  }
+
+  function setCachedChatResponses(postKey, messages, totalTokenCount) {
+    try {
+      if (!postKey) return;
+      const key = CACHE_KEYS.CHAT_RESPONSES + postKey;
+      const cacheData = {
+        messages: messages,
+        totalTokenCount: totalTokenCount,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(key, JSON.stringify(cacheData));
+    } catch (error) {
+      console.warn("Failed to cache chat responses:", error);
+    }
+  }
+
+  function clearCachedChatResponses(postKey) {
+    try {
+      if (!postKey) return;
+      const key = CACHE_KEYS.CHAT_RESPONSES + postKey;
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn("Failed to clear cached chat responses:", error);
     }
   }
 
@@ -280,6 +347,12 @@
                 const totalTokenCount =
                   data.usageMetadata?.totalTokenCount || 0;
 
+                // Cache the updated messages for the current post
+                const postKey = getCurrentPostKey();
+                if (postKey) {
+                  setCachedChatResponses(postKey, updatedMessages, totalTokenCount);
+                }
+
                 this.setState({
                   messages: updatedMessages,
                   isLoading: false,
@@ -301,18 +374,36 @@
       },
 
       clearChat: function () {
+        const postKey = getCurrentPostKey();
+        if (postKey) {
+          clearCachedChatResponses(postKey);
+        }
         this.setState({ messages: [], error: null, totalTokenCount: 0 });
       },
 
-      clearCache: function () {
-        clearCache();
-        console.log("Cache cleared");
-        // Optionally reload posts to get fresh data
+      loadCachedChatResponses: function () {
+        const postKey = getCurrentPostKey();
+        if (!postKey) return;
+
+        const cachedData = getCachedChatResponses(postKey);
+        if (cachedData && cachedData.messages) {
+          console.log("Loading cached chat responses for post:", postKey);
+          this.setState({
+            messages: cachedData.messages,
+            totalTokenCount: cachedData.totalTokenCount || 0,
+          });
+        }
+      },
+
+      clearPostsCache: function () {
+        clearPostsCache();
+        // Reload posts to get fresh data
         this.loadPosts();
       },
 
       componentDidMount: function () {
         this.loadPosts();
+        this.loadCachedChatResponses();
       },
 
       loadPosts: function () {
@@ -856,14 +947,28 @@
                 "(You can select up to 3 posts. These will be included as writing examples in the prompt.)"
               ),
               h(
-                "button",
-                {
-                  onClick: this.clearCache,
-                  disabled: isLoading,
-                  className: "clear-cache-button",
-                  title: "Clear cached content (refreshes from GitHub API)",
-                },
-                "Clear GitHub Cache"
+                "div",
+                { className: "cache-buttons" },
+                h(
+                  "button",
+                  {
+                    onClick: this.clearPostsCache,
+                    disabled: isLoading,
+                    className: "clear-cache-button",
+                    title: "Clear cached content (refreshes from GitHub API)",
+                  },
+                  "Clear Post Cache"
+                ),
+                h(
+                  "button",
+                  {
+                    onClick: clearAllChatResponseCaches,
+                    disabled: isLoading,
+                    className: "clear-chat-cache-button",
+                    title: "Clear all chat response caches across all posts",
+                  },
+                  "Clear All Chat Caches"
+                )
               )
             ),
 
