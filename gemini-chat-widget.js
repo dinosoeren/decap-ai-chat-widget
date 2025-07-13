@@ -24,8 +24,8 @@
     var GeminiChatControl = createClass({
       getInitialState: function () {
         return {
-          apiKey: this.props.value?.apiKey || "",
-          messages: this.props.value?.messages || [],
+          apiKey: "", // Never commit API keys to version control
+          messages: [],
           currentMessage: "",
           isLoading: false,
           error: null,
@@ -35,7 +35,7 @@
       handleApiKeyChange: function (e) {
         const apiKey = e.target.value;
         this.setState({ apiKey });
-        this.updateValue({ apiKey, messages: this.state.messages });
+        // Don't save API key to frontmatter
       },
 
       handleMessageChange: function (e) {
@@ -60,10 +60,7 @@
           error: null,
         });
 
-        this.updateValue({
-          apiKey: this.state.apiKey,
-          messages: updatedMessages,
-        });
+        // Don't save messages to frontmatter
 
         // Call Gemini API with the updated conversation history
         this.callGeminiAPI(userMessage, updatedMessages);
@@ -132,10 +129,7 @@
                 messages: updatedMessages,
                 isLoading: false,
               });
-              this.updateValue({
-                apiKey: this.state.apiKey,
-                messages: updatedMessages,
-              });
+              // Don't save messages to frontmatter
             } else {
               throw new Error("Invalid response format from Gemini API");
             }
@@ -151,11 +145,11 @@
 
       clearChat: function () {
         this.setState({ messages: [], error: null });
-        this.updateValue({ apiKey: this.state.apiKey, messages: [] });
       },
 
       updateValue: function (value) {
-        this.props.onChange(value);
+        // Don't save anything to frontmatter - this widget is purely for content creation
+        // and should not affect the content structure at all
       },
 
       render: function () {
@@ -284,21 +278,9 @@
       },
     });
 
-    // Schema for the widget
+    // Schema for the widget - empty since we don't save anything
     var schema = {
-      properties: {
-        apiKey: { type: "string" },
-        messages: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              role: { type: "string", enum: ["user", "assistant"] },
-              content: { type: "string" },
-            },
-          },
-        },
-      },
+      properties: {},
     };
 
     // Register the widget
