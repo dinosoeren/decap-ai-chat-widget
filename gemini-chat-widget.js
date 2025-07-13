@@ -12,36 +12,38 @@
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash";
 
   // Cache configuration
-  const CACHE_EXPIRY_HOURS = 24;
+  const CACHED_POSTS_EXPIRY_HOURS = 24;
   const CACHE_KEYS = {
     POSTS_LIST_GITHUB: "gemini_chat_posts_list_github",
     POSTS_LIST_SITEMAP: "gemini_chat_posts_list_sitemap",
     POST_CONTENT_GITHUB: "gemini_chat_post_content_github_",
     POST_CONTENT_SITEMAP: "gemini_chat_post_content_sitemap_",
-    CACHE_TIMESTAMP: "gemini_chat_cache_timestamp",
+    CACHED_POSTS_TIMESTAMP: "gemini_chat_cached_posts_timestamp",
     CHAT_RESPONSES: "gemini_chat_responses_",
   };
 
   // Cache utility functions
-  function isCacheValid() {
+
+  // Check if the posts were cached >24 hours ago
+  function areCachedPostsOld() {
     try {
-      const timestamp = localStorage.getItem(CACHE_KEYS.CACHE_TIMESTAMP);
+      const timestamp = localStorage.getItem(CACHE_KEYS.CACHED_POSTS_TIMESTAMP);
       if (!timestamp) return false;
 
       const cacheTime = new Date(parseInt(timestamp));
       const now = new Date();
       const hoursDiff = (now - cacheTime) / (1000 * 60 * 60);
 
-      return hoursDiff < CACHE_EXPIRY_HOURS;
+      return hoursDiff < CACHED_POSTS_EXPIRY_HOURS;
     } catch (error) {
-      console.warn("Cache validation failed:", error);
+      console.warn("Cache timestamp check failed:", error);
       return false;
     }
   }
 
-  function setCacheTimestamp() {
+  function setCachedPostsTimestamp() {
     try {
-      localStorage.setItem(CACHE_KEYS.CACHE_TIMESTAMP, Date.now().toString());
+      localStorage.setItem(CACHE_KEYS.CACHED_POSTS_TIMESTAMP, Date.now().toString());
     } catch (error) {
       console.warn("Failed to set cache timestamp:", error);
     }
@@ -49,7 +51,7 @@
 
   function getCachedPosts(source = "github") {
     try {
-      if (!isCacheValid()) return null;
+      if (!areCachedPostsOld()) return null;
       const key =
         source === "github"
           ? CACHE_KEYS.POSTS_LIST_GITHUB
@@ -69,7 +71,7 @@
           ? CACHE_KEYS.POSTS_LIST_GITHUB
           : CACHE_KEYS.POSTS_LIST_SITEMAP;
       localStorage.setItem(key, JSON.stringify(posts));
-      setCacheTimestamp();
+      setCachedPostsTimestamp();
     } catch (error) {
       console.warn("Failed to cache posts:", error);
     }
@@ -77,7 +79,7 @@
 
   function getCachedPostContent(postUrl, source = "github") {
     try {
-      if (!isCacheValid()) return null;
+      if (!areCachedPostsOld()) return null;
       const baseKey =
         source === "github"
           ? CACHE_KEYS.POST_CONTENT_GITHUB
@@ -99,7 +101,6 @@
           : CACHE_KEYS.POST_CONTENT_SITEMAP;
       const key = baseKey + btoa(postUrl).replace(/[^a-zA-Z0-9]/g, "");
       localStorage.setItem(key, JSON.stringify(content));
-      setCacheTimestamp();
     } catch (error) {
       console.warn("Failed to cache post content:", error);
     }
