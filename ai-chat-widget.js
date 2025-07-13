@@ -11,15 +11,16 @@
 
   // Map of LLM chatbots to their API base URLs
   const LLM_CHATBOTS = {
-    "gemini": {
-      name: "Gemini",
-      apiBaseUrl: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash"
-    }
+    gemini: {
+      name: "Gemini (2.5 Flash)",
+      apiBaseUrl:
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash",
+    },
+    openai: {
+      name: "ChatGPT (GPT-4o-mini)",
+      apiBaseUrl: "https://api.openai.com/v1/chat/completions",
+    },
     // Add more LLMs here as needed:
-    // "openai": {
-    //   name: "OpenAI GPT",
-    //   apiBaseUrl: "https://api.openai.com/v1/chat/completions"
-    // },
     // "anthropic": {
     //   name: "Claude",
     //   apiBaseUrl: "https://api.anthropic.com/v1/messages"
@@ -35,6 +36,7 @@
     POST_CONTENT_SITEMAP: "ai_chat_post_content_sitemap_",
     CACHED_POSTS_TIMESTAMP: "ai_chat_cached_posts_timestamp",
     CHAT_RESPONSES_GEMINI: "ai_chat_responses_gemini_",
+    CHAT_RESPONSES_OPENAI: "ai_chat_responses_openai_",
   };
 
   // Cache utility functions
@@ -58,7 +60,10 @@
 
   function setCachedPostsTimestamp() {
     try {
-      localStorage.setItem(CACHE_KEYS.CACHED_POSTS_TIMESTAMP, Date.now().toString());
+      localStorage.setItem(
+        CACHE_KEYS.CACHED_POSTS_TIMESTAMP,
+        Date.now().toString()
+      );
     } catch (error) {
       console.warn("Failed to set cache timestamp:", error);
     }
@@ -150,7 +155,11 @@
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith(CACHE_KEYS.CHAT_RESPONSES_GEMINI)) {
+        if (
+          key &&
+          (key.startsWith(CACHE_KEYS.CHAT_RESPONSES_GEMINI) ||
+            key.startsWith(CACHE_KEYS.CHAT_RESPONSES_OPENAI))
+        ) {
           keysToRemove.push(key);
         }
       }
@@ -177,10 +186,14 @@
     }
   }
 
-  function getCachedChatResponses(postKey) {
+  function getCachedChatResponses(postKey, model = "gemini") {
     try {
       if (!postKey) return null;
-      const key = CACHE_KEYS.CHAT_RESPONSES_GEMINI + postKey;
+      const cacheKey =
+        model === "openai"
+          ? CACHE_KEYS.CHAT_RESPONSES_OPENAI
+          : CACHE_KEYS.CHAT_RESPONSES_GEMINI;
+      const key = cacheKey + postKey;
       const cached = localStorage.getItem(key);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
@@ -189,10 +202,19 @@
     }
   }
 
-  function setCachedChatResponses(postKey, messages, totalTokenCount) {
+  function setCachedChatResponses(
+    postKey,
+    messages,
+    totalTokenCount,
+    model = "gemini"
+  ) {
     try {
       if (!postKey) return;
-      const key = CACHE_KEYS.CHAT_RESPONSES_GEMINI + postKey;
+      const cacheKey =
+        model === "openai"
+          ? CACHE_KEYS.CHAT_RESPONSES_OPENAI
+          : CACHE_KEYS.CHAT_RESPONSES_GEMINI;
+      const key = cacheKey + postKey;
       const cacheData = {
         messages: messages,
         totalTokenCount: totalTokenCount,
@@ -204,10 +226,14 @@
     }
   }
 
-  function clearCachedChatResponses(postKey) {
+  function clearCachedChatResponses(postKey, model = "gemini") {
     try {
       if (!postKey) return;
-      const key = CACHE_KEYS.CHAT_RESPONSES_GEMINI + postKey;
+      const cacheKey =
+        model === "openai"
+          ? CACHE_KEYS.CHAT_RESPONSES_OPENAI
+          : CACHE_KEYS.CHAT_RESPONSES_GEMINI;
+      const key = cacheKey + postKey;
       localStorage.removeItem(key);
     } catch (error) {
       console.warn("Failed to clear cached chat responses:", error);
@@ -253,7 +279,10 @@
 
       handleLLMChange: function (e) {
         const selectedLLM = e.target.value;
-        this.setState({ selectedLLM });
+        this.setState({ selectedLLM }, () => {
+          // Load cached responses for the new model
+          this.loadCachedChatResponses();
+        });
       },
 
       handleApiKeyChange: function (e) {
@@ -310,8 +339,6 @@
           return;
         }
 
-        const url = `${llmConfig.apiBaseUrl}:generateContent?key=${apiKey}`;
-
         // Load content from selected projects/blog posts and build enhanced prompt
         this.loadSelectedContent().then((postContent) => {
           // Build the conversation history for multi-turn chat
@@ -326,95 +353,184 @@
             enhancedMessages = [contextMessage];
           }
 
-          const contents = enhancedMessages.map((message) => ({
-            role: message.role === "user" ? "user" : "model",
-            parts: [
-              {
-                text: message.content,
-              },
-            ],
-          }));
-
-          const requestBody = {
-            contents: contents,
-          };
-
-          // Log the request for debugging (remove in production)
-          console.log(
-            "AI API Request:",
-            JSON.stringify(requestBody, null, 2)
-          );
-
-          fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestBody),
-          })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-              }
-              return response.json();
-            })
-            .then((data) => {
-              // Log the response for debugging (remove in production)
-              console.log(
-                "AI API Response:",
-                JSON.stringify(data, null, 2)
-              );
-
-              if (
-                data.candidates &&
-                data.candidates[0] &&
-                data.candidates[0].content
-              ) {
-                const assistantMessage =
-                  data.candidates[0].content.parts[0].text;
-                const updatedMessages = [
-                  ...messages,
-                  { role: "assistant", content: assistantMessage },
-                ];
-
-                // Extract total token count from usage metadata
-                const totalTokenCount =
-                  data.usageMetadata?.totalTokenCount || 0;
-
-                // Cache the updated messages for the current post
-                const postKey = getCurrentPostKey();
-                if (postKey) {
-                  setCachedChatResponses(
-                    postKey,
-                    updatedMessages,
-                    totalTokenCount
-                  );
-                }
-
-                this.setState({
-                  messages: updatedMessages,
-                  isLoading: false,
-                  totalTokenCount: totalTokenCount,
-                });
-                // Don't save messages to frontmatter
-              } else {
-                throw new Error("Invalid response format from AI API");
-              }
-            })
-            .catch((error) => {
-              console.error("Error calling AI API:", error);
-              this.setState({
-                isLoading: false,
-                error: error.message,
-              });
+          if (selectedLLM === "gemini") {
+            this.callGeminiAPI(apiKey, enhancedMessages, messages);
+          } else if (selectedLLM === "openai") {
+            this.callOpenAIAPI(apiKey, enhancedMessages, messages);
+          } else {
+            this.setState({
+              isLoading: false,
+              error: "Unsupported LLM selected",
             });
+          }
         });
+      },
+
+      callGeminiAPI: function (apiKey, enhancedMessages, originalMessages) {
+        const url = `${LLM_CHATBOTS.gemini.apiBaseUrl}:generateContent?key=${apiKey}`;
+
+        const contents = enhancedMessages.map((message) => ({
+          role: message.role === "user" ? "user" : "model",
+          parts: [
+            {
+              text: message.content,
+            },
+          ],
+        }));
+
+        const requestBody = {
+          contents: contents,
+        };
+
+        // Log the request for debugging (remove in production)
+        console.log(
+          "Gemini API Request:",
+          JSON.stringify(requestBody, null, 2)
+        );
+
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Log the response for debugging (remove in production)
+            console.log("Gemini API Response:", JSON.stringify(data, null, 2));
+
+            if (
+              data.candidates &&
+              data.candidates[0] &&
+              data.candidates[0].content
+            ) {
+              const assistantMessage = data.candidates[0].content.parts[0].text;
+              const updatedMessages = [
+                ...originalMessages,
+                { role: "assistant", content: assistantMessage },
+              ];
+
+              // Extract total token count from usage metadata
+              const totalTokenCount = data.usageMetadata?.totalTokenCount || 0;
+
+              // Cache the updated messages for the current post
+              const postKey = getCurrentPostKey();
+              if (postKey) {
+                setCachedChatResponses(
+                  postKey,
+                  updatedMessages,
+                  totalTokenCount,
+                  "gemini"
+                );
+              }
+
+              this.setState({
+                messages: updatedMessages,
+                isLoading: false,
+                totalTokenCount: totalTokenCount,
+              });
+            } else {
+              throw new Error("Invalid response format from Gemini API");
+            }
+          })
+          .catch((error) => {
+            console.error("Error calling Gemini API:", error);
+            this.setState({
+              isLoading: false,
+              error: error.message,
+            });
+          });
+      },
+
+      callOpenAIAPI: function (apiKey, enhancedMessages, originalMessages) {
+        const url = LLM_CHATBOTS["openai"].apiBaseUrl;
+
+        // Convert messages to OpenAI format
+        const messages = enhancedMessages.map((message) => ({
+          role: message.role === "user" ? "user" : "assistant",
+          content: message.content,
+        }));
+
+        const requestBody = {
+          model: "gpt-4o-mini",
+          messages: messages,
+          max_tokens: 4000,
+          temperature: 0.7,
+        };
+
+        // Log the request for debugging (remove in production)
+        console.log(
+          "OpenAI API Request:",
+          JSON.stringify(requestBody, null, 2)
+        );
+
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(requestBody),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Log the response for debugging (remove in production)
+            console.log("OpenAI API Response:", JSON.stringify(data, null, 2));
+
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+              const assistantMessage = data.choices[0].message.content;
+              const updatedMessages = [
+                ...originalMessages,
+                { role: "assistant", content: assistantMessage },
+              ];
+
+              // Extract total token count from usage
+              const totalTokenCount = data.usage?.total_tokens || 0;
+
+              // Cache the updated messages for the current post
+              const postKey = getCurrentPostKey();
+              if (postKey) {
+                setCachedChatResponses(
+                  postKey,
+                  updatedMessages,
+                  totalTokenCount,
+                  "openai"
+                );
+              }
+
+              this.setState({
+                messages: updatedMessages,
+                isLoading: false,
+                totalTokenCount: totalTokenCount,
+              });
+            } else {
+              throw new Error("Invalid response format from OpenAI API");
+            }
+          })
+          .catch((error) => {
+            console.error("Error calling OpenAI API:", error);
+            this.setState({
+              isLoading: false,
+              error: error.message,
+            });
+          });
       },
 
       clearChat: function () {
         const postKey = getCurrentPostKey();
         if (postKey) {
-          clearCachedChatResponses(postKey);
+          clearCachedChatResponses(postKey, this.state.selectedLLM);
         }
         this.setState({ messages: [], error: null, totalTokenCount: 0 });
       },
@@ -423,12 +539,20 @@
         const postKey = getCurrentPostKey();
         if (!postKey) return;
 
-        const cachedData = getCachedChatResponses(postKey);
+        const cachedData = getCachedChatResponses(
+          postKey,
+          this.state.selectedLLM
+        );
         if (cachedData && cachedData.messages) {
           console.log("Loading cached chat responses for post:", postKey);
           this.setState({
             messages: cachedData.messages,
             totalTokenCount: cachedData.totalTokenCount || 0,
+          });
+        } else {
+          this.setState({
+            messages: [],
+            totalTokenCount: 0,
           });
         }
       },
@@ -1013,19 +1137,23 @@
                   { htmlFor: this.props.forID + "-llm-select" },
                   "LLM:"
                 ),
-                h("select", {
-                  id: this.props.forID + "-llm-select",
-                  value: selectedLLM,
-                  onChange: this.handleLLMChange,
-                  className: "llm-dropdown",
-                }, Object.keys(LLM_CHATBOTS).map((llmKey) => {
-                  const llm = LLM_CHATBOTS[llmKey];
-                  return h(
-                    "option",
-                    { key: llmKey, value: llmKey },
-                    llm.name
-                  );
-                }))
+                h(
+                  "select",
+                  {
+                    id: this.props.forID + "-llm-select",
+                    value: selectedLLM,
+                    onChange: this.handleLLMChange,
+                    className: "llm-dropdown",
+                  },
+                  Object.keys(LLM_CHATBOTS).map((llmKey) => {
+                    const llm = LLM_CHATBOTS[llmKey];
+                    return h(
+                      "option",
+                      { key: llmKey, value: llmKey },
+                      llm.name
+                    );
+                  })
+                )
               ),
               h(
                 "div",
@@ -1040,7 +1168,9 @@
                   type: "password",
                   value: apiKey,
                   onChange: this.handleApiKeyChange,
-                  placeholder: `Enter your ${LLM_CHATBOTS[selectedLLM]?.name || 'LLM'} API key`,
+                  placeholder: `Enter your ${
+                    LLM_CHATBOTS[selectedLLM]?.name || "LLM"
+                  } API key`,
                   className: "api-key-input",
                 })
               )
