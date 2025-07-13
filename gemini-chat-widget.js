@@ -13,8 +13,10 @@
   // Cache configuration
   const CACHE_EXPIRY_HOURS = 24;
   const CACHE_KEYS = {
-    POSTS_LIST: "gemini_chat_posts_list",
-    POST_CONTENT: "gemini_chat_post_content_",
+    POSTS_LIST_GITHUB: "gemini_chat_posts_list_github",
+    POSTS_LIST_SITEMAP: "gemini_chat_posts_list_sitemap",
+    POST_CONTENT_GITHUB: "gemini_chat_post_content_github_",
+    POST_CONTENT_SITEMAP: "gemini_chat_post_content_sitemap_",
     CACHE_TIMESTAMP: "gemini_chat_cache_timestamp",
   };
 
@@ -43,10 +45,14 @@
     }
   }
 
-  function getCachedPosts() {
+  function getCachedPosts(source = "github") {
     try {
       if (!isCacheValid()) return null;
-      const cached = localStorage.getItem(CACHE_KEYS.POSTS_LIST);
+      const key =
+        source === "github"
+          ? CACHE_KEYS.POSTS_LIST_GITHUB
+          : CACHE_KEYS.POSTS_LIST_SITEMAP;
+      const cached = localStorage.getItem(key);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
       console.warn("Failed to get cached posts:", error);
@@ -54,20 +60,27 @@
     }
   }
 
-  function setCachedPosts(posts) {
+  function setCachedPosts(posts, source = "github") {
     try {
-      localStorage.setItem(CACHE_KEYS.POSTS_LIST, JSON.stringify(posts));
+      const key =
+        source === "github"
+          ? CACHE_KEYS.POSTS_LIST_GITHUB
+          : CACHE_KEYS.POSTS_LIST_SITEMAP;
+      localStorage.setItem(key, JSON.stringify(posts));
       setCacheTimestamp();
     } catch (error) {
       console.warn("Failed to cache posts:", error);
     }
   }
 
-  function getCachedPostContent(postUrl) {
+  function getCachedPostContent(postUrl, source = "github") {
     try {
       if (!isCacheValid()) return null;
-      const key =
-        CACHE_KEYS.POST_CONTENT + btoa(postUrl).replace(/[^a-zA-Z0-9]/g, "");
+      const baseKey =
+        source === "github"
+          ? CACHE_KEYS.POST_CONTENT_GITHUB
+          : CACHE_KEYS.POST_CONTENT_SITEMAP;
+      const key = baseKey + btoa(postUrl).replace(/[^a-zA-Z0-9]/g, "");
       const cached = localStorage.getItem(key);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
@@ -76,10 +89,13 @@
     }
   }
 
-  function setCachedPostContent(postUrl, content) {
+  function setCachedPostContent(postUrl, content, source = "github") {
     try {
-      const key =
-        CACHE_KEYS.POST_CONTENT + btoa(postUrl).replace(/[^a-zA-Z0-9]/g, "");
+      const baseKey =
+        source === "github"
+          ? CACHE_KEYS.POST_CONTENT_GITHUB
+          : CACHE_KEYS.POST_CONTENT_SITEMAP;
+      const key = baseKey + btoa(postUrl).replace(/[^a-zA-Z0-9]/g, "");
       localStorage.setItem(key, JSON.stringify(content));
       setCacheTimestamp();
     } catch (error) {
@@ -91,7 +107,7 @@
     try {
       // Clear all cache keys
       Object.values(CACHE_KEYS).forEach((key) => {
-        if (key !== CACHE_KEYS.POST_CONTENT) {
+        if (!key.includes("POST_CONTENT")) {
           localStorage.removeItem(key);
         }
       });
@@ -100,7 +116,11 @@
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith(CACHE_KEYS.POST_CONTENT)) {
+        if (
+          key &&
+          (key.startsWith(CACHE_KEYS.POST_CONTENT_GITHUB) ||
+            key.startsWith(CACHE_KEYS.POST_CONTENT_SITEMAP))
+        ) {
           keysToRemove.push(key);
         }
       }
@@ -298,10 +318,10 @@
       loadPosts: function () {
         this.setState({ loadingPosts: true });
 
-        // Check cache first
-        const cachedPosts = getCachedPosts();
+        // Check GitHub cache first
+        const cachedPosts = getCachedPosts("github");
         if (cachedPosts) {
-          console.log("Using cached posts list");
+          console.log("Using cached GitHub posts list");
           this.setState({
             posts: cachedPosts,
             loadingPosts: false,
@@ -314,7 +334,7 @@
           .then((posts) => {
             if (posts && posts.length > 0) {
               // Cache the results
-              setCachedPosts(posts);
+              setCachedPosts(posts, "github");
               this.setState({
                 posts: posts,
                 loadingPosts: false,
@@ -387,6 +407,17 @@
       },
 
       loadPostsFromSitemap: function () {
+        // Check sitemap cache first
+        const cachedSitemapPosts = getCachedPosts("sitemap");
+        if (cachedSitemapPosts) {
+          console.log("Using cached sitemap posts list");
+          this.setState({
+            posts: cachedSitemapPosts,
+            loadingPosts: false,
+          });
+          return;
+        }
+
         fetch(sitemapXmlPath)
           .then((response) => {
             if (!response.ok) {
@@ -444,6 +475,8 @@
               return new Date(b.lastmod) - new Date(a.lastmod);
             });
 
+            // Cache the sitemap results
+            setCachedPosts(posts, "sitemap");
             this.setState({
               posts: posts,
               loadingPosts: false,
@@ -459,8 +492,11 @@
       },
 
       loadPostContent: function (postUrl) {
-        // Check cache first
-        const cachedContent = getCachedPostContent(postUrl);
+        // Determine source and check appropriate cache
+        const source = postUrl.includes(rawGithubBaseUrl)
+          ? "github"
+          : "sitemap";
+        const cachedContent = getCachedPostContent(postUrl, source);
         if (cachedContent) {
           console.log("Using cached content for:", postUrl);
           return Promise.resolve(cachedContent);
@@ -485,7 +521,7 @@
             }
 
             // Cache the processed content
-            setCachedPostContent(postUrl, processedContent);
+            setCachedPostContent(postUrl, processedContent, source);
             return processedContent;
           })
           .catch((error) => {
@@ -517,6 +553,144 @@
           .join("\n");
 
         return content;
+      },
+
+      // Renders just the code blocks inside <pre> tags
+      renderSimpleMarkdown: function (content) {
+        if (!content) return h("div", {}, "");
+
+        // Split content into lines
+        const lines = content.split("\n");
+        const elements = [];
+        let currentParagraph = [];
+        let inCodeBlock = false;
+        let codeBlockContent = [];
+        let codeBlockIndex = 0;
+        let codeLanguage = "";
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const trimmedLine = line.trim();
+
+          // Check for code block start/end
+          if (trimmedLine.startsWith("```")) {
+            if (inCodeBlock) {
+              // End of code block
+              const codeContent = codeBlockContent.join("\n");
+              elements.push(
+                h(
+                  "pre",
+                  { key: `code-${codeBlockIndex}` },
+                  h(
+                    "div",
+                    { className: "code-block-header" },
+                    h("span", {}, codeLanguage || "Code"),
+                    h(
+                      "button",
+                      {
+                        className: "copy-button",
+                        "data-button-id": `copy-${codeBlockIndex}`,
+                        onClick: () =>
+                          this.copyToClipboard(
+                            codeContent,
+                            `copy-${codeBlockIndex}`
+                          ),
+                      },
+                      "Copy"
+                    )
+                  ),
+                  h("code", {}, codeContent)
+                )
+              );
+              codeBlockIndex++;
+              inCodeBlock = false;
+              codeBlockContent = [];
+              codeLanguage = "";
+            } else {
+              // Start of code block
+              if (currentParagraph.length > 0) {
+                elements.push(
+                  h(
+                    "p",
+                    { key: `p-${elements.length}` },
+                    this.renderInlineMarkdown(currentParagraph.join("\n"))
+                  )
+                );
+                currentParagraph = [];
+              }
+              inCodeBlock = true;
+              // Extract language from code block start (e.g., ```javascript -> javascript)
+              codeLanguage = trimmedLine.slice(3).trim();
+            }
+            continue;
+          }
+
+          if (inCodeBlock) {
+            codeBlockContent.push(line);
+            continue;
+          }
+
+          // Handle regular lines
+          if (trimmedLine === "") {
+            if (currentParagraph.length > 0) {
+              elements.push(
+                h(
+                  "p",
+                  { key: `p-${elements.length}` },
+                  this.renderInlineMarkdown(currentParagraph.join("\n"))
+                )
+              );
+              currentParagraph = [];
+            }
+          } else {
+            currentParagraph.push(line);
+          }
+        }
+
+        // Handle any remaining content
+        if (currentParagraph.length > 0) {
+          elements.push(
+            h(
+              "p",
+              { key: `p-${elements.length}` },
+              this.renderInlineMarkdown(currentParagraph.join("\n"))
+            )
+          );
+        }
+
+        return h("div", { className: "markdown-content" }, elements);
+      },
+
+      renderInlineMarkdown: function (text) {
+        if (!text) return "";
+
+        // For now, just return the text as-is
+        // In a more complex implementation, we could parse and render inline markdown
+        // but for simplicity, we'll keep it as plain text
+        return text;
+      },
+
+      copyToClipboard: function (text, buttonId) {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            // Find the button and show copied state
+            const button = document.querySelector(
+              `[data-button-id="${buttonId}"]`
+            );
+            if (button) {
+              const originalText = button.textContent;
+              button.textContent = "Copied!";
+              button.classList.add("copied");
+              setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove("copied");
+              }, 2000);
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to copy text: ", err);
+          });
       },
 
       handlePostSelection: function (e) {
@@ -551,8 +725,8 @@
           return contents
             .filter((content) => content.length > 0)
             .map((content, index) => {
-              // const contentObj = selectedContentObjects[index];
-              return `${content}\n\n---\n\n`;
+              const contentObj = selectedContentObjects[index];
+              return `${contentObj.name}\n\`\`\`${content}\n\`\`\`\n---\n\n`;
             })
             .join("");
         });
@@ -731,7 +905,7 @@
                     "Start a conversation with Gemini AI. Enter your API key above and type a message below."
                   )
                 ),
-              messages.map(function (message, index) {
+              messages.map((message, index) => {
                 const isUser = message.role === "user";
                 return h(
                   "div",
@@ -741,7 +915,13 @@
                       "message " +
                       (isUser ? "user-message" : "assistant-message"),
                   },
-                  h("div", { className: "message-content" }, message.content)
+                  h(
+                    "div",
+                    { className: "message-content" },
+                    isUser
+                      ? message.content
+                      : this.renderSimpleMarkdown(message.content)
+                  )
                 );
               }),
               isLoading &&
