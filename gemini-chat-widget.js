@@ -589,12 +589,10 @@
                       "button",
                       {
                         className: "copy-button",
-                        "data-button-id": `copy-${codeBlockIndex}`,
-                        onClick: () =>
-                          this.copyToClipboard(
-                            codeContent,
-                            `copy-${codeBlockIndex}`
-                          ),
+                        onClick: (e) => {
+                          const button = e.target;
+                          this.copyToClipboardWithButton(codeContent, button);
+                        },
                       },
                       "Copy"
                     )
@@ -686,7 +684,27 @@
                 button.textContent = originalText;
                 button.classList.remove("copied");
               }, 2000);
+            } else {
+              console.warn("Copy button not found:", buttonId);
             }
+          })
+          .catch((err) => {
+            console.error("Failed to copy text: ", err);
+          });
+      },
+
+      copyToClipboardWithButton: function (text, button) {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            // Update the button directly
+            const originalText = button.textContent;
+            button.textContent = "Copied!";
+            button.classList.add("copied");
+            setTimeout(() => {
+              button.textContent = originalText;
+              button.classList.remove("copied");
+            }, 2000);
           })
           .catch((err) => {
             console.error("Failed to copy text: ", err);
