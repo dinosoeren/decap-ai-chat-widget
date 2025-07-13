@@ -179,7 +179,7 @@
       const cacheData = {
         messages: messages,
         totalTokenCount: totalTokenCount,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       localStorage.setItem(key, JSON.stringify(cacheData));
     } catch (error) {
@@ -350,7 +350,11 @@
                 // Cache the updated messages for the current post
                 const postKey = getCurrentPostKey();
                 if (postKey) {
-                  setCachedChatResponses(postKey, updatedMessages, totalTokenCount);
+                  setCachedChatResponses(
+                    postKey,
+                    updatedMessages,
+                    totalTokenCount
+                  );
                 }
 
                 this.setState({
@@ -402,7 +406,6 @@
       },
 
       componentDidMount: function () {
-        this.loadPosts();
         this.loadCachedChatResponses();
       },
 
@@ -810,9 +813,22 @@
       },
 
       togglePostSelector: function () {
-        this.setState((prevState) => ({
-          showPostSelector: !prevState.showPostSelector,
-        }));
+        this.setState((prevState) => {
+          const newShowPostSelector = !prevState.showPostSelector;
+
+          // Load posts when showing the selector for the first time
+          if (
+            newShowPostSelector &&
+            prevState.posts.length === 0 &&
+            !prevState.loadingPosts
+          ) {
+            this.loadPosts();
+          }
+
+          return {
+            showPostSelector: newShowPostSelector,
+          };
+        });
       },
 
       loadSelectedContent: function () {
