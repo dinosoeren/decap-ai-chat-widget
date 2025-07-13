@@ -4,6 +4,7 @@
   const owner = "dinosoeren";
   const repo = "walls.dev";
   const branch = "main";
+  const postTypes = ["project", "blog"];
   const sitemapXmlPath = "../sitemap.xml";
   const githubApiBaseUrl = "https://api.github.com";
   const rawGithubBaseUrl = "https://raw.githubusercontent.com";
@@ -445,59 +446,34 @@
       },
 
       loadPostsFromGitHub: function () {
-        // Get project posts
-        const projectPromise = fetch(
-          `${githubApiBaseUrl}/repos/${owner}/${repo}/contents/content/project?ref=${branch}`
-        )
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then((data) => {
-            if (!Array.isArray(data)) return [];
-            return data
-              .filter((item) => item.type === "dir" && item.name !== "images")
-              .map((item) => ({
-                url: `${rawGithubBaseUrl}/${owner}/${repo}/${branch}/content/project/${item.name}/index.md`,
-                name: `[project] ${item.name}`,
-                type: "project",
-                content: null,
-                lastmod: null,
-                path: `content/project/${item.name}/index.md`,
-              }));
-          });
+        const postPromises = postTypes.map((postType) => {
+          return fetch(
+            `${githubApiBaseUrl}/repos/${owner}/${repo}/contents/content/${postType}?ref=${branch}`
+          )
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              if (!Array.isArray(data)) return [];
+              return data
+                .filter((item) => item.type === "dir" && item.name !== "images")
+                .map((item) => ({
+                  url: `${rawGithubBaseUrl}/${owner}/${repo}/${branch}/content/${postType}/${item.name}/index.md`,
+                  name: `[${postType}] ${item.name}`,
+                  type: postType,
+                  content: null,
+                  lastmod: null,
+                  path: `content/${postType}/${item.name}/index.md`,
+                }));
+            });
+        });
 
-        // Get blog posts
-        const blogPromise = fetch(
-          `${githubApiBaseUrl}/repos/${owner}/${repo}/contents/content/blog?ref=${branch}`
-        )
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then((data) => {
-            if (!Array.isArray(data)) return [];
-            return data
-              .filter((item) => item.type === "dir" && item.name !== "images")
-              .map((item) => ({
-                url: `${rawGithubBaseUrl}/${owner}/${repo}/${branch}/content/blog/${item.name}/index.md`,
-                name: `[blog] ${item.name}`,
-                type: "blog",
-                content: null,
-                lastmod: null,
-                path: `content/blog/${item.name}/index.md`,
-              }));
-          });
-
-        return Promise.all([projectPromise, blogPromise]).then(
-          ([projectPosts, blogPosts]) => {
-            return [...projectPosts, ...blogPosts];
-          }
-        );
+        return Promise.all(postPromises).then((allPosts) => {
+          return allPosts.flat();
+        });
       },
 
       loadPostsFromSitemap: function () {
@@ -533,9 +509,9 @@
                 const urlText = loc.textContent;
 
                 // Check for project or blog pages
-                let postType = urlText.includes("/project/") ? "project" : "";
-                if (!postType)
-                  postType = urlText.includes("/blog/") ? "blog" : "";
+                const postType = postTypes.find((type) =>
+                  urlText.includes(`/${type}/`)
+                );
 
                 if (postType) {
                   const postUrl = urlText;
