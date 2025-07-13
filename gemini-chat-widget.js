@@ -1,6 +1,115 @@
 // Custom Gemini Chat Widget for Decap CMS
 // Wait for CMS to be available before registering the widget
 (function () {
+  const owner = "dinosoeren";
+  const repo = "walls.dev";
+  const branch = "main";
+  const sitemapXmlPath = "../sitemap.xml";
+  const githubApiBaseUrl = "https://api.github.com";
+  const rawGithubBaseUrl = "https://raw.githubusercontent.com";
+  const geminiApiBaseUrl =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash";
+
+  // Cache configuration
+  const CACHE_EXPIRY_HOURS = 24;
+  const CACHE_KEYS = {
+    POSTS_LIST: "gemini_chat_posts_list",
+    POST_CONTENT: "gemini_chat_post_content_",
+    CACHE_TIMESTAMP: "gemini_chat_cache_timestamp",
+  };
+
+  // Cache utility functions
+  function isCacheValid() {
+    try {
+      const timestamp = localStorage.getItem(CACHE_KEYS.CACHE_TIMESTAMP);
+      if (!timestamp) return false;
+
+      const cacheTime = new Date(parseInt(timestamp));
+      const now = new Date();
+      const hoursDiff = (now - cacheTime) / (1000 * 60 * 60);
+
+      return hoursDiff < CACHE_EXPIRY_HOURS;
+    } catch (error) {
+      console.warn("Cache validation failed:", error);
+      return false;
+    }
+  }
+
+  function setCacheTimestamp() {
+    try {
+      localStorage.setItem(CACHE_KEYS.CACHE_TIMESTAMP, Date.now().toString());
+    } catch (error) {
+      console.warn("Failed to set cache timestamp:", error);
+    }
+  }
+
+  function getCachedPosts() {
+    try {
+      if (!isCacheValid()) return null;
+      const cached = localStorage.getItem(CACHE_KEYS.POSTS_LIST);
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.warn("Failed to get cached posts:", error);
+      return null;
+    }
+  }
+
+  function setCachedPosts(posts) {
+    try {
+      localStorage.setItem(CACHE_KEYS.POSTS_LIST, JSON.stringify(posts));
+      setCacheTimestamp();
+    } catch (error) {
+      console.warn("Failed to cache posts:", error);
+    }
+  }
+
+  function getCachedPostContent(postUrl) {
+    try {
+      if (!isCacheValid()) return null;
+      const key =
+        CACHE_KEYS.POST_CONTENT + btoa(postUrl).replace(/[^a-zA-Z0-9]/g, "");
+      const cached = localStorage.getItem(key);
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.warn("Failed to get cached post content:", error);
+      return null;
+    }
+  }
+
+  function setCachedPostContent(postUrl, content) {
+    try {
+      const key =
+        CACHE_KEYS.POST_CONTENT + btoa(postUrl).replace(/[^a-zA-Z0-9]/g, "");
+      localStorage.setItem(key, JSON.stringify(content));
+      setCacheTimestamp();
+    } catch (error) {
+      console.warn("Failed to cache post content:", error);
+    }
+  }
+
+  function clearCache() {
+    try {
+      // Clear all cache keys
+      Object.values(CACHE_KEYS).forEach((key) => {
+        if (key !== CACHE_KEYS.POST_CONTENT) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      // Clear all post content cache entries
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(CACHE_KEYS.POST_CONTENT)) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+    } catch (error) {
+      console.warn("Failed to clear cache:", error);
+    }
+  }
+
   let retryCount = 0;
   const maxRetries = 5;
 
@@ -80,7 +189,7 @@
 
       callGeminiAPI: function (userMessage, messages) {
         const apiKey = this.state.apiKey;
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const url = `${geminiApiBaseUrl}:generateContent?key=${apiKey}`;
 
         // Load content from selected projects/blog posts and build enhanced prompt
         this.loadSelectedContent().then((postContent) => {
@@ -148,7 +257,8 @@
                 ];
 
                 // Extract total token count from usage metadata
-                const totalTokenCount = data.usageMetadata?.totalTokenCount || 0;
+                const totalTokenCount =
+                  data.usageMetadata?.totalTokenCount || 0;
 
                 this.setState({
                   messages: updatedMessages,
@@ -174,6 +284,13 @@
         this.setState({ messages: [], error: null, totalTokenCount: 0 });
       },
 
+      clearCache: function () {
+        clearCache();
+        console.log("Cache cleared");
+        // Optionally reload posts to get fresh data
+        this.loadPosts();
+      },
+
       componentDidMount: function () {
         this.loadPosts();
       },
@@ -181,8 +298,96 @@
       loadPosts: function () {
         this.setState({ loadingPosts: true });
 
-        // Fetch sitemap.xml from the root directory
-        fetch("../sitemap.xml")
+        // Check cache first
+        const cachedPosts = getCachedPosts();
+        if (cachedPosts) {
+          console.log("Using cached posts list");
+          this.setState({
+            posts: cachedPosts,
+            loadingPosts: false,
+          });
+          return;
+        }
+
+        // Try GitHub API first, then fallback to sitemap
+        this.loadPostsFromGitHub()
+          .then((posts) => {
+            if (posts && posts.length > 0) {
+              // Cache the results
+              setCachedPosts(posts);
+              this.setState({
+                posts: posts,
+                loadingPosts: false,
+              });
+            } else {
+              // Fallback to sitemap method
+              this.loadPostsFromSitemap();
+            }
+          })
+          .catch((error) => {
+            console.warn("GitHub API failed, falling back to sitemap:", error);
+            this.loadPostsFromSitemap();
+          });
+      },
+
+      loadPostsFromGitHub: function () {
+        // Get project posts
+        const projectPromise = fetch(
+          `${githubApiBaseUrl}/repos/${owner}/${repo}/contents/content/project?ref=${branch}`
+        )
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (!Array.isArray(data)) return [];
+            return data
+              .filter((item) => item.type === "dir" && item.name !== "images")
+              .map((item) => ({
+                url: `${rawGithubBaseUrl}/${owner}/${repo}/${branch}/content/project/${item.name}/index.md`,
+                name: `[project] ${item.name}`,
+                type: "project",
+                content: null,
+                lastmod: null,
+                path: `content/project/${item.name}/index.md`,
+              }));
+          });
+
+        // Get blog posts
+        const blogPromise = fetch(
+          `${githubApiBaseUrl}/repos/${owner}/${repo}/contents/content/blog?ref=${branch}`
+        )
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (!Array.isArray(data)) return [];
+            return data
+              .filter((item) => item.type === "dir" && item.name !== "images")
+              .map((item) => ({
+                url: `${rawGithubBaseUrl}/${owner}/${repo}/${branch}/content/blog/${item.name}/index.md`,
+                name: `[blog] ${item.name}`,
+                type: "blog",
+                content: null,
+                lastmod: null,
+                path: `content/blog/${item.name}/index.md`,
+              }));
+          });
+
+        return Promise.all([projectPromise, blogPromise]).then(
+          ([projectPosts, blogPosts]) => {
+            return [...projectPosts, ...blogPosts];
+          }
+        );
+      },
+
+      loadPostsFromSitemap: function () {
+        fetch(sitemapXmlPath)
           .then((response) => {
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
@@ -245,7 +450,7 @@
             });
           })
           .catch((error) => {
-            console.error("Error loading posts:", error);
+            console.error("Error loading posts from sitemap:", error);
             this.setState({
               loadingPosts: false,
               error: "Failed to load posts: " + error.message,
@@ -254,6 +459,13 @@
       },
 
       loadPostContent: function (postUrl) {
+        // Check cache first
+        const cachedContent = getCachedPostContent(postUrl);
+        if (cachedContent) {
+          console.log("Using cached content for:", postUrl);
+          return Promise.resolve(cachedContent);
+        }
+
         return fetch(postUrl)
           .then((response) => {
             if (!response.ok) {
@@ -261,28 +473,50 @@
             }
             return response.text();
           })
-          .then((html) => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-            const contentElement = doc.querySelector(".post__content");
-            if (!contentElement) return "";
+          .then((content) => {
+            let processedContent;
+            // Check if this is a GitHub raw markdown file or HTML content
+            if (postUrl.includes(rawGithubBaseUrl)) {
+              // This is markdown content from GitHub API
+              processedContent = this.cleanMarkdownContent(content);
+            } else {
+              // This is HTML content from sitemap fallback
+              processedContent = this.extractHtmlContent(content);
+            }
 
-            // Get the text content and clean up whitespace
-            let content = contentElement.textContent;
-
-            // Split by newlines, trim each line, filter out empty lines, and rejoin
-            content = content
-              .split("\n")
-              .map((line) => line.trim())
-              .filter((line) => line.length > 0)
-              .join("\n");
-
-            return content;
+            // Cache the processed content
+            setCachedPostContent(postUrl, processedContent);
+            return processedContent;
           })
           .catch((error) => {
             console.error("Error loading post content:", error);
             return "";
           });
+      },
+
+      cleanMarkdownContent: function (markdown) {
+        // markdown content is considered already clean
+        return markdown;
+      },
+
+      extractHtmlContent: function (html) {
+        // Extract content from HTML (fallback method)
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const contentElement = doc.querySelector(".post__content");
+        if (!contentElement) return "";
+
+        // Get the text content and clean up whitespace
+        let content = contentElement.textContent;
+
+        // Split by newlines, trim each line, filter out empty lines, and rejoin
+        content = content
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .join("\n");
+
+        return content;
       },
 
       handlePostSelection: function (e) {
@@ -317,8 +551,8 @@
           return contents
             .filter((content) => content.length > 0)
             .map((content, index) => {
-              const contentObj = selectedContentObjects[index];
-              return `${contentObj.name}\n${content}\n\n---\n\n`;
+              // const contentObj = selectedContentObjects[index];
+              return `${content}\n\n---\n\n`;
             })
             .join("");
         });
@@ -548,6 +782,16 @@
                     className: "clear-button",
                   },
                   "Clear Chat"
+                ),
+                h(
+                  "button",
+                  {
+                    onClick: this.clearCache,
+                    disabled: isLoading,
+                    className: "clear-cache-button",
+                    title: "Clear cached content (refreshes from GitHub API)",
+                  },
+                  "Clear Cache"
                 )
               )
             )
