@@ -1,4 +1,4 @@
-// Custom Gemini Chat Widget for Decap CMS
+// Custom AI Chat Widget for Decap CMS
 // Wait for CMS to be available before registering the widget
 (function () {
   const owner = "dinosoeren";
@@ -8,18 +8,33 @@
   const sitemapXmlPath = "../sitemap.xml";
   const githubApiBaseUrl = "https://api.github.com";
   const rawGithubBaseUrl = "https://raw.githubusercontent.com";
-  const geminiApiBaseUrl =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash";
+
+  // Map of LLM chatbots to their API base URLs
+  const LLM_CHATBOTS = {
+    "gemini": {
+      name: "Gemini",
+      apiBaseUrl: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash"
+    }
+    // Add more LLMs here as needed:
+    // "openai": {
+    //   name: "OpenAI GPT",
+    //   apiBaseUrl: "https://api.openai.com/v1/chat/completions"
+    // },
+    // "anthropic": {
+    //   name: "Claude",
+    //   apiBaseUrl: "https://api.anthropic.com/v1/messages"
+    // }
+  };
 
   // Cache configuration
   const CACHED_POSTS_EXPIRY_HOURS = 24;
   const CACHE_KEYS = {
-    POSTS_LIST_GITHUB: "gemini_chat_posts_list_github",
-    POSTS_LIST_SITEMAP: "gemini_chat_posts_list_sitemap",
-    POST_CONTENT_GITHUB: "gemini_chat_post_content_github_",
-    POST_CONTENT_SITEMAP: "gemini_chat_post_content_sitemap_",
-    CACHED_POSTS_TIMESTAMP: "gemini_chat_cached_posts_timestamp",
-    CHAT_RESPONSES: "gemini_chat_responses_",
+    POSTS_LIST_GITHUB: "ai_chat_posts_list_github",
+    POSTS_LIST_SITEMAP: "ai_chat_posts_list_sitemap",
+    POST_CONTENT_GITHUB: "ai_chat_post_content_github_",
+    POST_CONTENT_SITEMAP: "ai_chat_post_content_sitemap_",
+    CACHED_POSTS_TIMESTAMP: "ai_chat_cached_posts_timestamp",
+    CHAT_RESPONSES_GEMINI: "ai_chat_responses_gemini_",
   };
 
   // Cache utility functions
@@ -129,13 +144,13 @@
     }
   }
 
-  // Clear all Gemini chat responses across all posts
+  // Clear all AI chat responses across all posts
   function clearAllChatResponseCaches() {
     try {
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith(CACHE_KEYS.CHAT_RESPONSES)) {
+        if (key && key.startsWith(CACHE_KEYS.CHAT_RESPONSES_GEMINI)) {
           keysToRemove.push(key);
         }
       }
@@ -165,7 +180,7 @@
   function getCachedChatResponses(postKey) {
     try {
       if (!postKey) return null;
-      const key = CACHE_KEYS.CHAT_RESPONSES + postKey;
+      const key = CACHE_KEYS.CHAT_RESPONSES_GEMINI + postKey;
       const cached = localStorage.getItem(key);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
@@ -177,7 +192,7 @@
   function setCachedChatResponses(postKey, messages, totalTokenCount) {
     try {
       if (!postKey) return;
-      const key = CACHE_KEYS.CHAT_RESPONSES + postKey;
+      const key = CACHE_KEYS.CHAT_RESPONSES_GEMINI + postKey;
       const cacheData = {
         messages: messages,
         totalTokenCount: totalTokenCount,
@@ -192,7 +207,7 @@
   function clearCachedChatResponses(postKey) {
     try {
       if (!postKey) return;
-      const key = CACHE_KEYS.CHAT_RESPONSES + postKey;
+      const key = CACHE_KEYS.CHAT_RESPONSES_GEMINI + postKey;
       localStorage.removeItem(key);
     } catch (error) {
       console.warn("Failed to clear cached chat responses:", error);
@@ -202,15 +217,15 @@
   let retryCount = 0;
   const maxRetries = 5;
 
-  function registerGeminiChatWidget() {
+  function registerAiChatWidget() {
     if (typeof CMS === "undefined") {
       // If CMS is not available yet, try again in a moment (up to maxRetries times)
       if (retryCount < maxRetries) {
         retryCount++;
-        setTimeout(registerGeminiChatWidget, 100);
+        setTimeout(registerAiChatWidget, 100);
       } else {
         console.warn(
-          "Gemini Chat widget: CMS not available after",
+          "AI Chat widget: CMS not available after",
           maxRetries,
           "retries. Widget registration failed."
         );
@@ -219,9 +234,10 @@
     }
 
     // Control component for the widget
-    var GeminiChatControl = createClass({
+    var AiChatControl = createClass({
       getInitialState: function () {
         return {
+          selectedLLM: "gemini", // Default to Gemini
           apiKey: "", // Never commit API keys to version control
           messages: [],
           currentMessage: "",
@@ -233,6 +249,11 @@
           showPostSelector: false,
           totalTokenCount: 0,
         };
+      },
+
+      handleLLMChange: function (e) {
+        const selectedLLM = e.target.value;
+        this.setState({ selectedLLM });
       },
 
       handleApiKeyChange: function (e) {
@@ -265,8 +286,8 @@
 
         // Don't save messages to frontmatter
 
-        // Call Gemini API with the updated conversation history
-        this.callGeminiAPI(userMessage, updatedMessages);
+        // Call AI API with the updated conversation history
+        this.callAiAPI(userMessage, updatedMessages);
       },
 
       handleKeyPress: function (e) {
@@ -276,9 +297,20 @@
         }
       },
 
-      callGeminiAPI: function (userMessage, messages) {
+      callAiAPI: function (userMessage, messages) {
         const apiKey = this.state.apiKey;
-        const url = `${geminiApiBaseUrl}:generateContent?key=${apiKey}`;
+        const selectedLLM = this.state.selectedLLM;
+        const llmConfig = LLM_CHATBOTS[selectedLLM];
+
+        if (!llmConfig) {
+          this.setState({
+            isLoading: false,
+            error: "Selected LLM not found in configuration",
+          });
+          return;
+        }
+
+        const url = `${llmConfig.apiBaseUrl}:generateContent?key=${apiKey}`;
 
         // Load content from selected projects/blog posts and build enhanced prompt
         this.loadSelectedContent().then((postContent) => {
@@ -309,7 +341,7 @@
 
           // Log the request for debugging (remove in production)
           console.log(
-            "Gemini API Request:",
+            "AI API Request:",
             JSON.stringify(requestBody, null, 2)
           );
 
@@ -329,7 +361,7 @@
             .then((data) => {
               // Log the response for debugging (remove in production)
               console.log(
-                "Gemini API Response:",
+                "AI API Response:",
                 JSON.stringify(data, null, 2)
               );
 
@@ -366,11 +398,11 @@
                 });
                 // Don't save messages to frontmatter
               } else {
-                throw new Error("Invalid response format from Gemini API");
+                throw new Error("Invalid response format from AI API");
               }
             })
             .catch((error) => {
-              console.error("Error calling Gemini API:", error);
+              console.error("Error calling AI API:", error);
               this.setState({
                 isLoading: false,
                 error: error.message,
@@ -841,6 +873,7 @@
 
       render: function () {
         const {
+          selectedLLM,
           apiKey,
           messages,
           currentMessage,
@@ -855,7 +888,7 @@
 
         return h(
           "div",
-          { className: "gemini-chat-widget" },
+          { className: "ai-chat-widget" },
 
           // Post selection toggle button
           h(
@@ -965,23 +998,53 @@
               )
             ),
 
-          // API Key Input
+          // LLM Selection and API Key Input
           h(
             "div",
             { className: "api-key-section" },
             h(
-              "label",
-              { htmlFor: this.props.forID + "-api-key" },
-              "Gemini API Key:"
-            ),
-            h("input", {
-              id: this.props.forID + "-api-key",
-              type: "password",
-              value: apiKey,
-              onChange: this.handleApiKeyChange,
-              placeholder: "Enter your Gemini API key",
-              className: "api-key-input",
-            })
+              "div",
+              { className: "llm-api-row" },
+              h(
+                "div",
+                { className: "llm-selector" },
+                h(
+                  "label",
+                  { htmlFor: this.props.forID + "-llm-select" },
+                  "LLM:"
+                ),
+                h("select", {
+                  id: this.props.forID + "-llm-select",
+                  value: selectedLLM,
+                  onChange: this.handleLLMChange,
+                  className: "llm-dropdown",
+                }, Object.keys(LLM_CHATBOTS).map((llmKey) => {
+                  const llm = LLM_CHATBOTS[llmKey];
+                  return h(
+                    "option",
+                    { key: llmKey, value: llmKey },
+                    llm.name
+                  );
+                }))
+              ),
+              h(
+                "div",
+                { className: "api-key-input-container" },
+                h(
+                  "label",
+                  { htmlFor: this.props.forID + "-api-key" },
+                  "API Key:"
+                ),
+                h("input", {
+                  id: this.props.forID + "-api-key",
+                  type: "password",
+                  value: apiKey,
+                  onChange: this.handleApiKeyChange,
+                  placeholder: `Enter your ${LLM_CHATBOTS[selectedLLM]?.name || 'LLM'} API key`,
+                  className: "api-key-input",
+                })
+              )
+            )
           ),
 
           // Chat Interface
@@ -1018,7 +1081,7 @@
                   h(
                     "p",
                     {},
-                    "Start a conversation with Gemini AI. Enter your API key above and type a message below."
+                    "Start a conversation with AI. Enter your API key above and type a message below."
                   )
                 ),
               messages.map((message, index) => {
@@ -1103,13 +1166,13 @@
 
     // Register the widget
     CMS.registerWidget(
-      "gemini-chat",
-      GeminiChatControl,
+      "ai-chat",
+      AiChatControl,
       null, // no preview
       schema
     );
   }
 
   // Start the registration process
-  registerGeminiChatWidget();
+  registerAiChatWidget();
 })();
