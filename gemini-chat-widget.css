@@ -294,6 +294,29 @@
   cursor: not-allowed;
 }
 
+.clear-cache-button {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.clear-cache-button:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.clear-cache-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
 /* Preview Styles */
 .gemini-chat-preview {
   padding: 12px;

@@ -662,6 +662,16 @@
                 "div",
                 { className: "post-selection-note" },
                 "(You can select up to 3 posts. These will be included as writing examples in the prompt.)"
+              ),
+              h(
+                "button",
+                {
+                  onClick: this.clearCache,
+                  disabled: isLoading,
+                  className: "clear-cache-button",
+                  title: "Clear cached content (refreshes from GitHub API)",
+                },
+                "Clear GitHub Cache"
               )
             ),
 
@@ -782,16 +792,6 @@
                     className: "clear-button",
                   },
                   "Clear Chat"
-                ),
-                h(
-                  "button",
-                  {
-                    onClick: this.clearCache,
-                    disabled: isLoading,
-                    className: "clear-cache-button",
-                    title: "Clear cached content (refreshes from GitHub API)",
-                  },
-                  "Clear Cache"
                 )
               )
             )
