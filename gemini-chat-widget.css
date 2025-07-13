@@ -139,10 +139,6 @@
   font-weight: 500;
 }
 
-.message-count {
-  display: block;
-}
-
 /* Messages Container */
 .messages-container {
   flex: 1;

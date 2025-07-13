@@ -33,6 +33,7 @@
           selectedPosts: [],
           loadingPosts: false,
           showPostSelector: false,
+          totalTokenCount: 0,
         };
       },
 
@@ -146,9 +147,13 @@
                   { role: "assistant", content: assistantMessage },
                 ];
 
+                // Extract total token count from usage metadata
+                const totalTokenCount = data.usageMetadata?.totalTokenCount || 0;
+
                 this.setState({
                   messages: updatedMessages,
                   isLoading: false,
+                  totalTokenCount: totalTokenCount,
                 });
                 // Don't save messages to frontmatter
               } else {
@@ -166,7 +171,7 @@
       },
 
       clearChat: function () {
-        this.setState({ messages: [], error: null });
+        this.setState({ messages: [], error: null, totalTokenCount: 0 });
       },
 
       componentDidMount: function () {
@@ -335,6 +340,7 @@
           selectedPosts,
           loadingPosts,
           showPostSelector,
+          totalTokenCount,
         } = this.state;
 
         return h(
@@ -459,7 +465,13 @@
                   `${messages.length} message${
                     messages.length !== 1 ? "s" : ""
                   } in conversation`
-                )
+                ),
+                totalTokenCount > 0 &&
+                  h(
+                    "span",
+                    { className: "token-count" },
+                    ` • ${totalTokenCount.toLocaleString()} tokens used`
+                  )
               ),
             // Messages Area
             h(
