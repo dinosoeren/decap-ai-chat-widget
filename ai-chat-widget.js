@@ -888,10 +888,14 @@
 
       renderInlineMarkdown: function (text) {
         if (!text) return "";
-
-        // For now, just return the text as-is
-        // In a more complex implementation, we could parse and render inline markdown
-        // but for simplicity, we'll keep it as plain text
+        if (typeof marked === "function") {
+          return marked(text);
+        } else if (
+          typeof marked === "object" &&
+          typeof marked.parse === "function"
+        ) {
+          return marked.parse(text);
+        }
         return text;
       },
 
