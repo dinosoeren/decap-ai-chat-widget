@@ -492,3 +492,137 @@
     box-sizing: border-box;
   }
 }
+
+/* Code Samples Styles */
+.username-section {
+  margin-bottom: 16px;
+}
+
+.repository-section {
+  margin-bottom: 16px;
+}
+
+.repository-content-section {
+  margin-bottom: 16px;
+}
+
+.breadcrumb-section {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e1e5e9;
+}
+
+.current-path {
+  font-size: 12px;
+  color: #6c757d;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  word-break: break-all;
+}
+
+.file-list-section {
+  margin-bottom: 12px;
+}
+
+.file-list-section select option {
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.file-list-section select option:hover {
+  background-color: #f8f9fa;
+}
+
+/* Repository content styling */
+.repository-content-section .post-dropdown option {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 13px;
+}
+
+/* Username input styling */
+.username-section input {
+  margin-bottom: 8px;
+}
+
+.username-section button {
+  margin-bottom: 12px;
+}
+
+/* Repository selector styling */
+.repository-section select {
+  margin-bottom: 8px;
+}
+
+/* File size styling */
+.file-list-section select option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* File list container and directory items */
+.file-list-container {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #fff;
+  margin-bottom: 8px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.2s;
+}
+
+.file-item:last-child {
+  border-bottom: none;
+}
+
+.file-item:hover {
+  background-color: #f8f9fa;
+}
+
+.directory-item {
+  background-color: #f8f9fa;
+  font-weight: 500;
+}
+
+.directory-item:hover {
+  background-color: #e9ecef;
+}
+
+.file-icon {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.file-name {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 13px;
+  color: #333;
+}
+
+/* Responsive adjustments for code samples */
+@media (max-width: 768px) {
+  .username-section,
+  .repository-section,
+  .repository-content-section {
+    margin-bottom: 12px;
+  }
+
+  .breadcrumb-section {
+    padding: 6px 8px;
+  }
+
+  .current-path {
+    font-size: 11px;
+  }
+
+  .file-list-section select {
+    font-size: 12px;
+  }
+}

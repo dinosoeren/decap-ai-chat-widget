@@ -37,6 +37,10 @@
     CACHED_POSTS_TIMESTAMP: "ai_chat_cached_posts_timestamp",
     CHAT_RESPONSES_GEMINI: "ai_chat_responses_gemini_",
     CHAT_RESPONSES_OPENAI: "ai_chat_responses_openai_",
+    // New cache keys for code samples
+    REPOSITORIES_LIST: "ai_chat_repositories_list_",
+    REPOSITORY_CONTENT: "ai_chat_repository_content_",
+    CODE_SAMPLES_CACHE: "ai_chat_code_samples_cache_",
   };
 
   // Cache utility functions
@@ -240,6 +244,90 @@
     }
   }
 
+  // Code samples cache utility functions
+  function getCachedRepositories(username) {
+    try {
+      const key = CACHE_KEYS.REPOSITORIES_LIST + username;
+      const cached = localStorage.getItem(key);
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.warn("Failed to get cached repositories:", error);
+      return null;
+    }
+  }
+
+  function setCachedRepositories(username, repositories) {
+    try {
+      const key = CACHE_KEYS.REPOSITORIES_LIST + username;
+      localStorage.setItem(key, JSON.stringify(repositories));
+    } catch (error) {
+      console.warn("Failed to cache repositories:", error);
+    }
+  }
+
+  function getCachedRepositoryContent(repoPath) {
+    try {
+      const key = CACHE_KEYS.REPOSITORY_CONTENT + btoa(repoPath).replace(/[^a-zA-Z0-9]/g, "");
+      const cached = localStorage.getItem(key);
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.warn("Failed to get cached repository content:", error);
+      return null;
+    }
+  }
+
+  function setCachedRepositoryContent(repoPath, content) {
+    try {
+      const key = CACHE_KEYS.REPOSITORY_CONTENT + btoa(repoPath).replace(/[^a-zA-Z0-9]/g, "");
+      localStorage.setItem(key, JSON.stringify(content));
+    } catch (error) {
+      console.warn("Failed to cache repository content:", error);
+    }
+  }
+
+  function getCachedCodeSamples(postKey) {
+    try {
+      if (!postKey) return null;
+      const key = CACHE_KEYS.CODE_SAMPLES_CACHE + postKey;
+      const cached = localStorage.getItem(key);
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.warn("Failed to get cached code samples:", error);
+      return null;
+    }
+  }
+
+  function setCachedCodeSamples(postKey, codeSamples) {
+    try {
+      if (!postKey) return;
+      const key = CACHE_KEYS.CODE_SAMPLES_CACHE + postKey;
+      localStorage.setItem(key, JSON.stringify(codeSamples));
+    } catch (error) {
+      console.warn("Failed to cache code samples:", error);
+    }
+  }
+
+  function clearCodeSamplesCache() {
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (
+          key &&
+          (key.startsWith(CACHE_KEYS.REPOSITORIES_LIST) ||
+            key.startsWith(CACHE_KEYS.REPOSITORY_CONTENT) ||
+            key.startsWith(CACHE_KEYS.CODE_SAMPLES_CACHE))
+        ) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+      console.log("Code samples cache cleared");
+    } catch (error) {
+      console.warn("Failed to clear code samples cache:", error);
+    }
+  }
+
   let retryCount = 0;
   const maxRetries = 5;
 
@@ -274,6 +362,16 @@
           loadingPosts: false,
           showPostSelector: false,
           totalTokenCount: 0,
+          // Code samples state
+          username: "dinosoeren", // Default username
+          repositories: [],
+          selectedRepository: "",
+          currentPath: "",
+          repositoryContent: [],
+          selectedCodeFiles: [],
+          loadingRepositories: false,
+          loadingRepositoryContent: false,
+          showCodeSamplesSelector: false,
         };
       },
 
@@ -323,6 +421,74 @@
         if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
           this.handleSendMessage();
+        }
+      },
+
+      // Code samples event handlers
+      handleUsernameChange: function (e) {
+        const username = e.target.value;
+        this.setState({ username });
+      },
+
+      handleRepositoryChange: function (e) {
+        const selectedRepository = e.target.value;
+        this.setState({
+          selectedRepository,
+          currentPath: "",
+          repositoryContent: [],
+          selectedCodeFiles: []
+        }, () => {
+          if (selectedRepository) {
+            this.loadRepositoryContent(selectedRepository, "");
+          }
+        });
+      },
+
+      handleCodeFileSelection: function (e) {
+        const selectedOptions = Array.from(e.target.selectedOptions);
+        const selectedFileNames = selectedOptions.map((option) => option.value);
+
+        // Limit to 10 selections
+        if (selectedFileNames.length > 10) {
+          // Deselect the last selected if over limit
+          e.target.options[e.target.selectedIndex].selected = false;
+          return;
+        }
+
+        this.setState({ selectedCodeFiles: selectedFileNames });
+      },
+
+      toggleCodeSamplesSelector: function () {
+        this.setState((prevState) => {
+          const newShowCodeSamplesSelector = !prevState.showCodeSamplesSelector;
+
+          // Load repositories when showing the selector for the first time
+          if (
+            newShowCodeSamplesSelector &&
+            prevState.repositories.length === 0 &&
+            !prevState.loadingRepositories
+          ) {
+            this.loadRepositories();
+          }
+
+          return {
+            showCodeSamplesSelector: newShowCodeSamplesSelector,
+          };
+        });
+      },
+
+      navigateToPath: function (path) {
+        const { selectedRepository } = this.state;
+        if (selectedRepository) {
+          this.loadRepositoryContent(selectedRepository, path);
+        }
+      },
+
+      navigateUp: function () {
+        const { currentPath } = this.state;
+        if (currentPath) {
+          const parentPath = currentPath.split('/').slice(0, -1).join('/');
+          this.navigateToPath(parentPath);
         }
       },
 
@@ -718,6 +884,162 @@
           });
       },
 
+      // Code samples loading methods
+      loadRepositories: function () {
+        const { username } = this.state;
+        this.setState({ loadingRepositories: true });
+
+        // Check cache first
+        const cachedRepositories = getCachedRepositories(username);
+        if (cachedRepositories) {
+          console.log("Using cached repositories list");
+          this.setState({
+            repositories: cachedRepositories,
+            loadingRepositories: false,
+          });
+          return;
+        }
+
+        fetch(`${githubApiBaseUrl}/users/${username}/repos?sort=updated&per_page=100`)
+          .then((response) => {
+            if (!response.ok) {
+              if (response.status === 403) {
+                throw new Error("GitHub API rate limit exceeded. Please try again later or use a GitHub token for higher limits.");
+              } else if (response.status === 404) {
+                throw new Error(`User '${username}' not found on GitHub.`);
+              } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (!Array.isArray(data)) {
+              throw new Error("Invalid response from GitHub API");
+            }
+
+            const repositories = data
+              .filter((repo) => !repo.fork) // Exclude forked repositories
+              .map((repo) => ({
+                name: repo.name,
+                fullName: repo.full_name,
+                description: repo.description || "",
+                language: repo.language || "Unknown",
+                updatedAt: repo.updated_at,
+                defaultBranch: repo.default_branch,
+              }))
+              .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+            // Cache the results
+            setCachedRepositories(username, repositories);
+            this.setState({
+              repositories: repositories,
+              loadingRepositories: false,
+            });
+          })
+          .catch((error) => {
+            console.error("Error loading repositories:", error);
+            this.setState({
+              loadingRepositories: false,
+              error: "Failed to load repositories: " + error.message,
+            });
+          });
+      },
+
+      loadRepositoryContent: function (repository, path) {
+        const { username } = this.state;
+        this.setState({ loadingRepositoryContent: true });
+
+        const repoPath = `${username}/${repository}/${path}`;
+
+        // Check cache first
+        const cachedContent = getCachedRepositoryContent(repoPath);
+        if (cachedContent) {
+          console.log("Using cached repository content for:", repoPath);
+          this.setState({
+            repositoryContent: cachedContent,
+            currentPath: path,
+            loadingRepositoryContent: false,
+          });
+          return;
+        }
+
+        fetch(`${githubApiBaseUrl}/repos/${username}/${repository}/contents/${path}`)
+          .then((response) => {
+            if (!response.ok) {
+              if (response.status === 403) {
+                throw new Error("GitHub API rate limit exceeded. Please try again later or use a GitHub token for higher limits.");
+              } else if (response.status === 404) {
+                throw new Error(`Path '${path}' not found in repository '${repository}'.`);
+              } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+            }
+            return response.json();
+          })
+          .then((data) => {
+            let content = [];
+
+            if (Array.isArray(data)) {
+              // Directory contents
+              content = data
+                .filter((item) => item.type === "file" || item.type === "dir")
+                .map((item) => ({
+                  name: item.name,
+                  type: item.type,
+                  path: item.path,
+                  size: item.size || 0,
+                  downloadUrl: item.download_url,
+                }))
+                .sort((a, b) => {
+                  // Directories first, then files, both alphabetically
+                  if (a.type !== b.type) {
+                    return a.type === "dir" ? -1 : 1;
+                  }
+                  return a.name.localeCompare(b.name);
+                });
+            } else {
+              // Single file
+              content = [{
+                name: data.name,
+                type: data.type,
+                path: data.path,
+                size: data.size || 0,
+                downloadUrl: data.download_url,
+              }];
+            }
+
+            // Cache the results
+            setCachedRepositoryContent(repoPath, content);
+            this.setState({
+              repositoryContent: content,
+              currentPath: path,
+              loadingRepositoryContent: false,
+            });
+          })
+          .catch((error) => {
+            console.error("Error loading repository content:", error);
+            this.setState({
+              loadingRepositoryContent: false,
+              error: "Failed to load repository content: " + error.message,
+            });
+          });
+      },
+
+      loadCodeFileContent: function (fileUrl) {
+        return fetch(fileUrl)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+          })
+          .catch((error) => {
+            console.error("Error loading code file content:", error);
+            return "";
+          });
+      },
+
       loadPostContent: function (postUrl) {
         // Determine source and check appropriate cache
         const source = postUrl.includes(rawGithubBaseUrl)
@@ -969,29 +1291,77 @@
       },
 
       loadSelectedContent: function () {
-        const { posts, selectedPosts } = this.state;
+        const { posts, selectedPosts, repositories, selectedRepository, selectedCodeFiles, repositoryContent } = this.state;
 
-        if (selectedPosts.length === 0) {
-          return Promise.resolve("");
+        const contentPromises = [];
+
+        // Load selected post content
+        if (selectedPosts.length > 0) {
+          const selectedContentObjects = posts.filter((post) =>
+            selectedPosts.includes(post.name)
+          );
+
+          const postContentPromises = selectedContentObjects.map((post) =>
+            this.loadPostContent(post.url)
+          );
+
+          contentPromises.push(
+            Promise.all(postContentPromises).then((contents) => {
+              return contents
+                .filter((content) => content.length > 0)
+                .map((content, index) => {
+                  const contentObj = selectedContentObjects[index];
+                  return `${contentObj.name}\n\`\`\`${content}\n\`\`\`\n---\n\n`;
+                })
+                .join("");
+            })
+          );
         }
 
-        const selectedContentObjects = posts.filter((post) =>
-          selectedPosts.includes(post.name)
-        );
+        // Load selected code files
+        if (selectedCodeFiles.length > 0 && selectedRepository) {
+          const selectedFileObjects = repositoryContent.filter((item) =>
+            selectedCodeFiles.includes(item.name)
+          );
 
-        const contentPromises = selectedContentObjects.map((post) =>
-          this.loadPostContent(post.url)
-        );
+          const codeContentPromises = selectedFileObjects.map((file) =>
+            this.loadCodeFileContent(file.downloadUrl)
+          );
+
+          contentPromises.push(
+            Promise.all(codeContentPromises).then((contents) => {
+              return contents
+                .filter((content) => content.length > 0)
+                .map((content, index) => {
+                  const fileObj = selectedFileObjects[index];
+                  const filePath = fileObj.path;
+                  const fileName = fileObj.name;
+                  return `Code file: ${fileName} (${filePath})\n\`\`\`${this.getFileExtension(fileName)}\n${content}\n\`\`\`\n---\n\n`;
+                })
+                .join("");
+            })
+          );
+        }
 
         return Promise.all(contentPromises).then((contents) => {
-          return contents
-            .filter((content) => content.length > 0)
-            .map((content, index) => {
-              const contentObj = selectedContentObjects[index];
-              return `${contentObj.name}\n\`\`\`${content}\n\`\`\`\n---\n\n`;
-            })
-            .join("");
+          return contents.join("");
         });
+      },
+
+      getFileExtension: function (fileName) {
+        const parts = fileName.split('.');
+        if (parts.length > 1) {
+          return parts[parts.length - 1];
+        }
+        return 'text';
+      },
+
+      formatFileSize: function (bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
       },
 
       updateValue: function (value) {
@@ -1012,6 +1382,16 @@
           loadingPosts,
           showPostSelector,
           totalTokenCount,
+          // Code samples state
+          username,
+          repositories,
+          selectedRepository,
+          currentPath,
+          repositoryContent,
+          selectedCodeFiles,
+          loadingRepositories,
+          loadingRepositoryContent,
+          showCodeSamplesSelector,
         } = this.state;
 
         return h(
@@ -1122,6 +1502,205 @@
                     title: "Clear all chat response caches across all posts",
                   },
                   "Clear All Chat Caches"
+                )
+              )
+            ),
+
+          // Code samples toggle button
+          h(
+            "div",
+            { className: "post-toggle-section" },
+            h(
+              "button",
+              {
+                type: "button",
+                onClick: this.toggleCodeSamplesSelector,
+                className: "post-toggle-button",
+              },
+              showCodeSamplesSelector
+                ? "Hide Code Samples"
+                : "Show Code Samples"
+            ),
+            selectedCodeFiles.length > 0 &&
+              h(
+                "span",
+                { className: "selected-count" },
+                ` (${selectedCodeFiles.length} selected)`
+              )
+          ),
+
+          // Code samples selector (hidden by default)
+          showCodeSamplesSelector &&
+            h(
+              "div",
+              { className: "post-selection-section" },
+              // Username input
+              h(
+                "div",
+                { className: "username-section" },
+                h(
+                  "label",
+                  { htmlFor: this.props.forID + "-username" },
+                  "GitHub Username:"
+                ),
+                h("input", {
+                  id: this.props.forID + "-username",
+                  type: "text",
+                  value: username,
+                  onChange: this.handleUsernameChange,
+                  placeholder: "Enter GitHub username",
+                  className: "api-key-input",
+                  style: { marginBottom: "12px" }
+                }),
+                h(
+                  "button",
+                  {
+                    onClick: this.loadRepositories,
+                    disabled: loadingRepositories || !username.trim(),
+                    className: "clear-cache-button",
+                    style: { marginBottom: "16px" }
+                  },
+                  loadingRepositories ? "Loading..." : "Load Repositories"
+                )
+              ),
+
+              // Repository selector
+              repositories.length > 0 &&
+                h(
+                  "div",
+                  { className: "repository-section" },
+                  h(
+                    "label",
+                    { htmlFor: this.props.forID + "-repo-select" },
+                    "Select Repository:"
+                  ),
+                  h(
+                    "select",
+                    {
+                      id: this.props.forID + "-repo-select",
+                      value: selectedRepository,
+                      onChange: this.handleRepositoryChange,
+                      className: "post-dropdown",
+                      style: { marginBottom: "12px" }
+                    },
+                    h("option", { value: "" }, "Choose a repository..."),
+                    repositories.map((repo) => {
+                      const date = new Date(repo.updatedAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      });
+                      const displayText = `${repo.name} (${repo.language}) - Updated ${date}`;
+
+                      return h(
+                        "option",
+                        { key: repo.name, value: repo.name },
+                        displayText
+                      );
+                    })
+                  )
+                ),
+
+              // Repository content browser
+              selectedRepository &&
+                h(
+                  "div",
+                  { className: "repository-content-section" },
+                  // Breadcrumb navigation
+                  currentPath &&
+                    h(
+                      "div",
+                      { className: "breadcrumb-section" },
+                      h(
+                        "button",
+                        {
+                          onClick: this.navigateUp,
+                          className: "clear-cache-button",
+                          style: { marginBottom: "8px", fontSize: "12px" }
+                        },
+                        "← Go Up"
+                      ),
+                      h(
+                        "div",
+                        { className: "current-path" },
+                        `Current path: ${currentPath || "root"}`
+                      )
+                    ),
+
+                  // File/directory list
+                  h(
+                    "div",
+                    { className: "file-list-section" },
+                    h(
+                      "label",
+                      { htmlFor: this.props.forID + "-file-select" },
+                      "Select up to 10 code files:"
+                    ),
+                    loadingRepositoryContent
+                      ? h("div", { className: "loading-posts" }, "Loading files...")
+                      : h(
+                          "div",
+                          { className: "file-list-container" },
+                          // Directories first
+                          repositoryContent
+                            .filter((item) => item.type === "dir")
+                            .map((item) =>
+                              h(
+                                "div",
+                                {
+                                  key: item.path,
+                                  className: "file-item directory-item",
+                                  onClick: () => this.navigateToPath(item.path),
+                                },
+                                h("span", { className: "file-icon" }, "📁"),
+                                h("span", { className: "file-name" }, item.name)
+                              )
+                            ),
+                          // Then files
+                          h(
+                            "select",
+                            {
+                              id: this.props.forID + "-file-select",
+                              multiple: true,
+                              size: Math.min(8, repositoryContent.filter(item => item.type === "file").length + 1),
+                              value: selectedCodeFiles,
+                              onChange: this.handleCodeFileSelection,
+                              className: "post-dropdown",
+                            },
+                            repositoryContent
+                              .filter((item) => item.type === "file")
+                              .map((item) => {
+                                const size = ` (${this.formatFileSize(item.size)})`;
+                                const displayText = `📄 ${item.name}${size}`;
+
+                                return h(
+                                  "option",
+                                  { key: item.path, value: item.name },
+                                  displayText
+                                );
+                              })
+                          )
+                        )
+                  )
+                ),
+
+              h(
+                "div",
+                { className: "post-selection-note" },
+                "(You can select up to 10 code files. These will be included as code examples in the prompt.)"
+              ),
+              h(
+                "div",
+                { className: "cache-buttons" },
+                h(
+                  "button",
+                  {
+                    onClick: clearCodeSamplesCache,
+                    disabled: isLoading,
+                    className: "clear-cache-button",
+                    title: "Clear cached repositories and file content",
+                  },
+                  "Clear Code Cache"
                 )
               )
             ),
