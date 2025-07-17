@@ -519,9 +519,10 @@
 
           // If this is the first message and we have post content, add it as context
           if (messages.length === 1 && postContent) {
+            const specialInstructions = `Please format your response in markdown instead of HTML. If your response includes nested code blocks, please use backslashes to escape the ticks (\\\`).`;
             const contextMessage = {
               role: "user",
-              content: `${postContent}\n\nNow, please respond to my prompt: ${userMessage}`,
+              content: `${postContent}\n\nNow, please respond to my prompt: ${userMessage}\n\n${specialInstructions}`,
             };
             enhancedMessages = [contextMessage];
           }
