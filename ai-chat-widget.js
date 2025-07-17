@@ -376,6 +376,7 @@
           loadingRepositories: false,
           loadingRepositoryContent: false,
           showCodeSamplesSelector: false,
+          includeForks: false,
         };
       },
 
@@ -444,17 +445,27 @@
         if (!postKey) return;
         const cached = getCachedCodeSamples(postKey);
         if (cached && cached.selectedRepository) {
-          // Restore repository, path, and selected files
-          this.setState({
-            selectedRepository: cached.selectedRepository,
-            currentPath: cached.currentPath || "",
-            selectedCodeFiles: cached.selectedCodeFiles || [],
-            showCodeSamplesSelector: cached.showCodeSamplesSelector || false,
-          }, () => {
-            if (cached.selectedRepository) {
-              this.loadRepositoryContent(cached.selectedRepository, cached.currentPath || "");
+          // Restore repository, path, selected files, and settings
+          this.setState(
+            {
+              selectedRepository: cached.selectedRepository,
+              currentPath: cached.currentPath || "",
+              selectedCodeFiles: cached.selectedCodeFiles || [],
+              showCodeSamplesSelector: cached.showCodeSamplesSelector || false,
+              includeForks:
+                typeof cached.includeForks === "boolean"
+                  ? cached.includeForks
+                  : false,
+            },
+            () => {
+              if (cached.selectedRepository) {
+                this.loadRepositoryContent(
+                  cached.selectedRepository,
+                  cached.currentPath || ""
+                );
+              }
             }
-          });
+          );
         }
       },
 
@@ -466,6 +477,7 @@
           currentPath: this.state.currentPath,
           selectedCodeFiles: this.state.selectedCodeFiles,
           showCodeSamplesSelector: this.state.showCodeSamplesSelector,
+          includeForks: this.state.includeForks,
         });
       },
 
@@ -498,7 +510,10 @@
           return;
         }
 
-        this.setState({ selectedCodeFiles: selectedFileNames }, this.persistCodeSamplesSelection);
+        this.setState(
+          { selectedCodeFiles: selectedFileNames },
+          this.persistCodeSamplesSelection
+        );
       },
 
       toggleCodeSamplesSelector: function () {
@@ -929,7 +944,7 @@
 
       // Code samples loading methods
       loadRepositories: function () {
-        const { username } = this.state;
+        const { username, includeForks } = this.state;
         this.setState({ loadingRepositories: true });
 
         // Check cache first
@@ -944,7 +959,9 @@
         }
 
         fetch(
-          `${githubApiBaseUrl}/users/${username}/repos?sort=updated&per_page=100`
+          `${githubApiBaseUrl}/users/${username}/repos?sort=updated&per_page=100&type=${
+            includeForks ? "all" : "owner"
+          }`
         )
           .then((response) => {
             if (!response.ok) {
@@ -966,7 +983,7 @@
             }
 
             const repositories = data
-              .filter((repo) => !repo.fork) // Exclude forked repositories
+              .filter((repo) => (includeForks ? true : !repo.fork)) // Exclude forked repositories unless includeForks is true
               .map((repo) => ({
                 name: repo.name,
                 fullName: repo.full_name,
@@ -1466,6 +1483,7 @@
           loadingRepositories,
           loadingRepositoryContent,
           showCodeSamplesSelector,
+          includeForks,
         } = this.state;
 
         return h(
@@ -1626,6 +1644,29 @@
                   className: "api-key-input",
                   style: { marginBottom: "12px" },
                 }),
+                // Include forks checkbox
+                h(
+                  "label",
+                  {
+                    style: {
+                      display: "block",
+                      marginBottom: "8px",
+                      fontSize: "13px",
+                    },
+                  },
+                  h("input", {
+                    type: "checkbox",
+                    checked: includeForks,
+                    onChange: (e) => {
+                      this.setState(
+                        { includeForks: e.target.checked },
+                        this.loadRepositories
+                      );
+                    },
+                    style: { marginRight: "6px" },
+                  }),
+                  "Include forked repositories"
+                ),
                 h(
                   "button",
                   {
