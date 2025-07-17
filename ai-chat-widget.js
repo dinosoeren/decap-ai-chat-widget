@@ -37,7 +37,7 @@
     CACHED_POSTS_TIMESTAMP: "ai_chat_cached_posts_timestamp",
     CHAT_RESPONSES_GEMINI: "ai_chat_responses_gemini_",
     CHAT_RESPONSES_OPENAI: "ai_chat_responses_openai_",
-    // New cache keys for code samples
+    // Cache keys for code samples
     REPOSITORIES_LIST: "ai_chat_repositories_list_",
     REPOSITORY_CONTENT: "ai_chat_repository_content_",
     CODE_SAMPLES_CACHE: "ai_chat_code_samples_cache_",
@@ -434,6 +434,41 @@
         this.setState({ username });
       },
 
+      componentDidMount: function () {
+        this.loadCachedChatResponses();
+        this.loadCachedCodeSamples();
+      },
+
+      loadCachedCodeSamples: function () {
+        const postKey = getCurrentPostKey();
+        if (!postKey) return;
+        const cached = getCachedCodeSamples(postKey);
+        if (cached && cached.selectedRepository) {
+          // Restore repository, path, and selected files
+          this.setState({
+            selectedRepository: cached.selectedRepository,
+            currentPath: cached.currentPath || "",
+            selectedCodeFiles: cached.selectedCodeFiles || [],
+            showCodeSamplesSelector: cached.showCodeSamplesSelector || false,
+          }, () => {
+            if (cached.selectedRepository) {
+              this.loadRepositoryContent(cached.selectedRepository, cached.currentPath || "");
+            }
+          });
+        }
+      },
+
+      persistCodeSamplesSelection: function () {
+        const postKey = getCurrentPostKey();
+        if (!postKey) return;
+        setCachedCodeSamples(postKey, {
+          selectedRepository: this.state.selectedRepository,
+          currentPath: this.state.currentPath,
+          selectedCodeFiles: this.state.selectedCodeFiles,
+          showCodeSamplesSelector: this.state.showCodeSamplesSelector,
+        });
+      },
+
       handleRepositoryChange: function (e) {
         const selectedRepository = e.target.value;
         this.setState(
@@ -447,6 +482,7 @@
             if (selectedRepository) {
               this.loadRepositoryContent(selectedRepository, "");
             }
+            this.persistCodeSamplesSelection();
           }
         );
       },
@@ -462,7 +498,7 @@
           return;
         }
 
-        this.setState({ selectedCodeFiles: selectedFileNames });
+        this.setState({ selectedCodeFiles: selectedFileNames }, this.persistCodeSamplesSelection);
       },
 
       toggleCodeSamplesSelector: function () {
@@ -478,6 +514,8 @@
             this.loadRepositories();
           }
 
+          setTimeout(() => this.persistCodeSamplesSelection(), 0);
+
           return {
             showCodeSamplesSelector: newShowCodeSamplesSelector,
           };
@@ -489,6 +527,7 @@
         if (selectedRepository) {
           this.loadRepositoryContent(selectedRepository, path);
         }
+        this.setState({ currentPath: path }, this.persistCodeSamplesSelection);
       },
 
       navigateUp: function () {
@@ -735,10 +774,6 @@
         clearPostsCache();
         // Reload posts to get fresh data
         this.loadPosts();
-      },
-
-      componentDidMount: function () {
-        this.loadCachedChatResponses();
       },
 
       loadPosts: function () {
