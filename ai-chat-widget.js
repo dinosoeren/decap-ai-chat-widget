@@ -267,7 +267,9 @@
 
   function getCachedRepositoryContent(repoPath) {
     try {
-      const key = CACHE_KEYS.REPOSITORY_CONTENT + btoa(repoPath).replace(/[^a-zA-Z0-9]/g, "");
+      const key =
+        CACHE_KEYS.REPOSITORY_CONTENT +
+        btoa(repoPath).replace(/[^a-zA-Z0-9]/g, "");
       const cached = localStorage.getItem(key);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
@@ -278,7 +280,9 @@
 
   function setCachedRepositoryContent(repoPath, content) {
     try {
-      const key = CACHE_KEYS.REPOSITORY_CONTENT + btoa(repoPath).replace(/[^a-zA-Z0-9]/g, "");
+      const key =
+        CACHE_KEYS.REPOSITORY_CONTENT +
+        btoa(repoPath).replace(/[^a-zA-Z0-9]/g, "");
       localStorage.setItem(key, JSON.stringify(content));
     } catch (error) {
       console.warn("Failed to cache repository content:", error);
@@ -432,16 +436,19 @@
 
       handleRepositoryChange: function (e) {
         const selectedRepository = e.target.value;
-        this.setState({
-          selectedRepository,
-          currentPath: "",
-          repositoryContent: [],
-          selectedCodeFiles: []
-        }, () => {
-          if (selectedRepository) {
-            this.loadRepositoryContent(selectedRepository, "");
+        this.setState(
+          {
+            selectedRepository,
+            currentPath: "",
+            repositoryContent: [],
+            selectedCodeFiles: [],
+          },
+          () => {
+            if (selectedRepository) {
+              this.loadRepositoryContent(selectedRepository, "");
+            }
           }
-        });
+        );
       },
 
       handleCodeFileSelection: function (e) {
@@ -487,7 +494,7 @@
       navigateUp: function () {
         const { currentPath } = this.state;
         if (currentPath) {
-          const parentPath = currentPath.split('/').slice(0, -1).join('/');
+          const parentPath = currentPath.split("/").slice(0, -1).join("/");
           this.navigateToPath(parentPath);
         }
       },
@@ -514,7 +521,7 @@
           if (messages.length === 1 && postContent) {
             const contextMessage = {
               role: "user",
-              content: `Here are some examples of my writing style from previous content:\n\n${postContent}\n\nNow, please respond to my prompt: ${userMessage}`,
+              content: `${postContent}\n\nNow, please respond to my prompt: ${userMessage}`,
             };
             enhancedMessages = [contextMessage];
           }
@@ -900,11 +907,15 @@
           return;
         }
 
-        fetch(`${githubApiBaseUrl}/users/${username}/repos?sort=updated&per_page=100`)
+        fetch(
+          `${githubApiBaseUrl}/users/${username}/repos?sort=updated&per_page=100`
+        )
           .then((response) => {
             if (!response.ok) {
               if (response.status === 403) {
-                throw new Error("GitHub API rate limit exceeded. Please try again later or use a GitHub token for higher limits.");
+                throw new Error(
+                  "GitHub API rate limit exceeded. Please try again later or use a GitHub token for higher limits."
+                );
               } else if (response.status === 404) {
                 throw new Error(`User '${username}' not found on GitHub.`);
               } else {
@@ -964,13 +975,19 @@
           return;
         }
 
-        fetch(`${githubApiBaseUrl}/repos/${username}/${repository}/contents/${path}`)
+        fetch(
+          `${githubApiBaseUrl}/repos/${username}/${repository}/contents/${path}`
+        )
           .then((response) => {
             if (!response.ok) {
               if (response.status === 403) {
-                throw new Error("GitHub API rate limit exceeded. Please try again later or use a GitHub token for higher limits.");
+                throw new Error(
+                  "GitHub API rate limit exceeded. Please try again later or use a GitHub token for higher limits."
+                );
               } else if (response.status === 404) {
-                throw new Error(`Path '${path}' not found in repository '${repository}'.`);
+                throw new Error(
+                  `Path '${path}' not found in repository '${repository}'.`
+                );
               } else {
                 throw new Error(`HTTP error! status: ${response.status}`);
               }
@@ -1000,13 +1017,15 @@
                 });
             } else {
               // Single file
-              content = [{
-                name: data.name,
-                type: data.type,
-                path: data.path,
-                size: data.size || 0,
-                downloadUrl: data.download_url,
-              }];
+              content = [
+                {
+                  name: data.name,
+                  type: data.type,
+                  path: data.path,
+                  size: data.size || 0,
+                  downloadUrl: data.download_url,
+                },
+              ];
             }
 
             // Cache the results
@@ -1291,9 +1310,20 @@
       },
 
       loadSelectedContent: function () {
-        const { posts, selectedPosts, repositories, selectedRepository, selectedCodeFiles, repositoryContent } = this.state;
+        const {
+          posts,
+          selectedPosts,
+          repositories,
+          selectedRepository,
+          selectedCodeFiles,
+          repositoryContent,
+        } = this.state;
 
-        const contentPromises = [];
+        const contentPromises = [
+          Promise.resolve(
+            "Here are some examples of my writing style from previous content:\n\n"
+          ),
+        ];
 
         // Load selected post content
         if (selectedPosts.length > 0) {
@@ -1320,6 +1350,12 @@
 
         // Load selected code files
         if (selectedCodeFiles.length > 0 && selectedRepository) {
+          contentPromises.push(
+            Promise.resolve(
+              "Here are some code files related to my prompt:\n\n"
+            )
+          );
+
           const selectedFileObjects = repositoryContent.filter((item) =>
             selectedCodeFiles.includes(item.name)
           );
@@ -1336,7 +1372,9 @@
                   const fileObj = selectedFileObjects[index];
                   const filePath = fileObj.path;
                   const fileName = fileObj.name;
-                  return `Code file: ${fileName} (${filePath})\n\`\`\`${this.getFileExtension(fileName)}\n${content}\n\`\`\`\n---\n\n`;
+                  return `Code file: ${fileName} (${filePath})\n\`\`\`${this.getFileExtension(
+                    fileName
+                  )}\n${content}\n\`\`\`\n---\n\n`;
                 })
                 .join("");
             })
@@ -1349,19 +1387,19 @@
       },
 
       getFileExtension: function (fileName) {
-        const parts = fileName.split('.');
+        const parts = fileName.split(".");
         if (parts.length > 1) {
           return parts[parts.length - 1];
         }
-        return 'text';
+        return "text";
       },
 
       formatFileSize: function (bytes) {
-        if (bytes === 0) return '0 Bytes';
+        if (bytes === 0) return "0 Bytes";
         const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const sizes = ["Bytes", "KB", "MB", "GB"];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
       },
 
       updateValue: function (value) {
@@ -1550,7 +1588,7 @@
                   onChange: this.handleUsernameChange,
                   placeholder: "Enter GitHub username",
                   className: "api-key-input",
-                  style: { marginBottom: "12px" }
+                  style: { marginBottom: "12px" },
                 }),
                 h(
                   "button",
@@ -1558,7 +1596,7 @@
                     onClick: this.loadRepositories,
                     disabled: loadingRepositories || !username.trim(),
                     className: "clear-cache-button",
-                    style: { marginBottom: "16px" }
+                    style: { marginBottom: "16px" },
                   },
                   loadingRepositories ? "Loading..." : "Load Repositories"
                 )
@@ -1581,15 +1619,18 @@
                       value: selectedRepository,
                       onChange: this.handleRepositoryChange,
                       className: "post-dropdown",
-                      style: { marginBottom: "12px" }
+                      style: { marginBottom: "12px" },
                     },
                     h("option", { value: "" }, "Choose a repository..."),
                     repositories.map((repo) => {
-                      const date = new Date(repo.updatedAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      });
+                      const date = new Date(repo.updatedAt).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        }
+                      );
                       const displayText = `${repo.name} (${repo.language}) - Updated ${date}`;
 
                       return h(
@@ -1616,7 +1657,7 @@
                         {
                           onClick: this.navigateUp,
                           className: "clear-cache-button",
-                          style: { marginBottom: "8px", fontSize: "12px" }
+                          style: { marginBottom: "8px", fontSize: "12px" },
                         },
                         "← Go Up"
                       ),
@@ -1637,7 +1678,11 @@
                       "Select up to 10 code files:"
                     ),
                     loadingRepositoryContent
-                      ? h("div", { className: "loading-posts" }, "Loading files...")
+                      ? h(
+                          "div",
+                          { className: "loading-posts" },
+                          "Loading files..."
+                        )
                       : h(
                           "div",
                           { className: "file-list-container" },
@@ -1662,7 +1707,12 @@
                             {
                               id: this.props.forID + "-file-select",
                               multiple: true,
-                              size: Math.min(8, repositoryContent.filter(item => item.type === "file").length + 1),
+                              size: Math.min(
+                                8,
+                                repositoryContent.filter(
+                                  (item) => item.type === "file"
+                                ).length + 1
+                              ),
                               value: selectedCodeFiles,
                               onChange: this.handleCodeFileSelection,
                               className: "post-dropdown",
@@ -1670,7 +1720,9 @@
                             repositoryContent
                               .filter((item) => item.type === "file")
                               .map((item) => {
-                                const size = ` (${this.formatFileSize(item.size)})`;
+                                const size = ` (${this.formatFileSize(
+                                  item.size
+                                )})`;
                                 const displayText = `📄 ${item.name}${size}`;
 
                                 return h(
