@@ -1384,14 +1384,16 @@
 
       renderInlineMarkdown: function (text) {
         if (!text) return "";
-        if (typeof marked === "function") {
-          return marked(text);
-        } else if (
-          typeof marked === "object" &&
-          typeof marked.parse === "function"
-        ) {
-          return marked.parse(text);
-        }
+        // marked.parse() returns raw HTML which can't be rendered with h()
+        // without using dangerouslySetInnerHTML
+        // if (typeof marked === "function") {
+        //   return marked(text);
+        // } else if (
+        //   typeof marked === "object" &&
+        //   typeof marked.parse === "function"
+        // ) {
+        //   return marked.parse(text);
+        // }
         return text;
       },
 
