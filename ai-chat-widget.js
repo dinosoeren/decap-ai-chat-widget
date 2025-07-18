@@ -390,6 +390,7 @@
           loadingRepositoryContent: false,
           showCodeSamplesSelector: false,
           includeForks: false,
+          isFullscreen: false, // Add fullscreen state
         };
       },
 
@@ -1566,6 +1567,10 @@
         // and should not affect the content structure at all
       },
 
+      toggleFullscreen: function () {
+        this.setState((prevState) => ({ isFullscreen: !prevState.isFullscreen }));
+      },
+
       render: function () {
         const {
           selectedLLM,
@@ -1590,11 +1595,28 @@
           loadingRepositoryContent,
           showCodeSamplesSelector,
           includeForks,
+          isFullscreen,
         } = this.state;
 
         return h(
           "div",
-          { className: "ai-chat-widget" },
+          {
+            className:
+              "ai-chat-widget" + (isFullscreen ? " fullscreen" : ""),
+            style: isFullscreen
+              ? {
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  width: "100vw",
+                  height: "100vh",
+                  zIndex: 9999,
+                  borderRadius: 0,
+                  margin: 0,
+                  background: "#fff",
+                }
+              : {},
+          },
 
           // Post selection toggle button
           h(
@@ -1998,30 +2020,39 @@
           // Chat Interface
           h(
             "div",
-            { className: "chat-container" },
-            // Conversation Header
-            messages.length > 0 &&
+            { className: "chat-container" + (isFullscreen ? " fullscreen" : "") ,
+              style: isFullscreen ? { height: "calc(100vh - 0px)", minHeight: 0, flex: 1 } : {}
+            },
+            // Conversation Header + Fullscreen Button
+            h(
+              "div",
+              { className: "conversation-header", style: { display: "flex", alignItems: "center", justifyContent: "space-between" } },
               h(
-                "div",
-                { className: "conversation-header" },
+                "span",
+                { className: "message-count" },
+                `${messages.length} message${messages.length !== 1 ? "s" : ""} in conversation`
+              ),
+              totalTokenCount > 0 &&
                 h(
                   "span",
-                  { className: "message-count" },
-                  `${messages.length} message${
-                    messages.length !== 1 ? "s" : ""
-                  } in conversation`
+                  { className: "token-count" },
+                  ` • ${totalTokenCount.toLocaleString()} tokens used`
                 ),
-                totalTokenCount > 0 &&
-                  h(
-                    "span",
-                    { className: "token-count" },
-                    ` • ${totalTokenCount.toLocaleString()} tokens used`
-                  )
-              ),
+              h(
+                "button",
+                {
+                  onClick: this.toggleFullscreen,
+                  className: "fullscreen-toggle-button post-toggle-button",
+                  title: isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen",
+                  style: { marginLeft: "auto", marginRight: 0 },
+                },
+                isFullscreen ? "🗗" : "🗖"
+              )
+            ),
             // Messages Area
             h(
               "div",
-              { className: "messages-container" },
+              { className: "messages-container" + (isFullscreen ? " fullscreen" : ""), style: isFullscreen ? { maxHeight: "none", flex: 1, minHeight: 0 } : {} },
               messages.length === 0 &&
                 h(
                   "div",
@@ -2069,7 +2100,7 @@
             // Input Area
             h(
               "div",
-              { className: "input-area" },
+              { className: "input-area" + (isFullscreen ? " fullscreen" : ""), style: isFullscreen ? { flexShrink: 0 } : {} },
               h("textarea", {
                 value: currentMessage,
                 onChange: this.handleMessageChange,

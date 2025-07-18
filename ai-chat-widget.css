@@ -7,6 +7,63 @@
   background: #fff;
 }
 
+.ai-chat-widget.fullscreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.chat-container.fullscreen {
+  height: 100vh !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+}
+
+.messages-container.fullscreen {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+}
+
+.input-area.fullscreen {
+  position: sticky !important;
+  bottom: 0 !important;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  z-index: 10000;
+  border-top: 1px solid #e1e5e9;
+}
+
+.fullscreen-toggle-button {
+  background: #007cba;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-left: 12px;
+}
+
+.fullscreen-toggle-button:hover {
+  background: #005a87;
+}
+
 /* API Key Section */
 .api-key-section {
   padding: 16px;
