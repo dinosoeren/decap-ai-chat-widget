@@ -20,11 +20,10 @@
       name: "ChatGPT (GPT-4o-mini)",
       apiBaseUrl: "https://api.openai.com/v1/chat/completions",
     },
-    // Add more LLMs here as needed:
-    // "anthropic": {
-    //   name: "Claude",
-    //   apiBaseUrl: "https://api.anthropic.com/v1/messages"
-    // }
+    anthropic: {
+      name: "Claude (Opus)",
+      apiBaseUrl: "https://api.anthropic.com/v1/messages",
+    },
   };
 
   // Cache configuration
@@ -37,6 +36,7 @@
     CACHED_POSTS_TIMESTAMP: "ai_chat_cached_posts_timestamp",
     CHAT_RESPONSES_GEMINI: "ai_chat_responses_gemini_",
     CHAT_RESPONSES_OPENAI: "ai_chat_responses_openai_",
+    CHAT_RESPONSES_ANTHROPIC: "ai_chat_responses_anthropic_",
     // Cache keys for code samples
     REPOSITORIES_LIST: "ai_chat_repositories_list_",
     REPOSITORY_CONTENT: "ai_chat_repository_content_",
@@ -162,7 +162,8 @@
         if (
           key &&
           (key.startsWith(CACHE_KEYS.CHAT_RESPONSES_GEMINI) ||
-            key.startsWith(CACHE_KEYS.CHAT_RESPONSES_OPENAI))
+            key.startsWith(CACHE_KEYS.CHAT_RESPONSES_OPENAI) ||
+            key.startsWith(CACHE_KEYS.CHAT_RESPONSES_ANTHROPIC))
         ) {
           keysToRemove.push(key);
         }
@@ -193,10 +194,14 @@
   function getCachedChatResponses(postKey, model = "gemini") {
     try {
       if (!postKey) return null;
-      const cacheKey =
-        model === "openai"
-          ? CACHE_KEYS.CHAT_RESPONSES_OPENAI
-          : CACHE_KEYS.CHAT_RESPONSES_GEMINI;
+      let cacheKey;
+      if (model === "openai") {
+        cacheKey = CACHE_KEYS.CHAT_RESPONSES_OPENAI;
+      } else if (model === "anthropic") {
+        cacheKey = CACHE_KEYS.CHAT_RESPONSES_ANTHROPIC;
+      } else {
+        cacheKey = CACHE_KEYS.CHAT_RESPONSES_GEMINI;
+      }
       const key = cacheKey + postKey;
       const cached = localStorage.getItem(key);
       return cached ? JSON.parse(cached) : null;
@@ -214,10 +219,14 @@
   ) {
     try {
       if (!postKey) return;
-      const cacheKey =
-        model === "openai"
-          ? CACHE_KEYS.CHAT_RESPONSES_OPENAI
-          : CACHE_KEYS.CHAT_RESPONSES_GEMINI;
+      let cacheKey;
+      if (model === "openai") {
+        cacheKey = CACHE_KEYS.CHAT_RESPONSES_OPENAI;
+      } else if (model === "anthropic") {
+        cacheKey = CACHE_KEYS.CHAT_RESPONSES_ANTHROPIC;
+      } else {
+        cacheKey = CACHE_KEYS.CHAT_RESPONSES_GEMINI;
+      }
       const key = cacheKey + postKey;
       const cacheData = {
         messages: messages,
@@ -233,10 +242,14 @@
   function clearCachedChatResponses(postKey, model = "gemini") {
     try {
       if (!postKey) return;
-      const cacheKey =
-        model === "openai"
-          ? CACHE_KEYS.CHAT_RESPONSES_OPENAI
-          : CACHE_KEYS.CHAT_RESPONSES_GEMINI;
+      let cacheKey;
+      if (model === "openai") {
+        cacheKey = CACHE_KEYS.CHAT_RESPONSES_OPENAI;
+      } else if (model === "anthropic") {
+        cacheKey = CACHE_KEYS.CHAT_RESPONSES_ANTHROPIC;
+      } else {
+        cacheKey = CACHE_KEYS.CHAT_RESPONSES_GEMINI;
+      }
       const key = cacheKey + postKey;
       localStorage.removeItem(key);
     } catch (error) {
@@ -573,10 +586,9 @@
 
           // If this is the first message and we have post content, add it as context
           if (messages.length === 1 && postContent) {
-            const specialInstructions = "Please format your response in lightweight markdown (no support for raw HTML tags). DO NOT USE HTML TAGS, ONLY MARKDOWN. If you need to include nested code blocks, use backslashes to escape the ticks (\\`\\`\\`).";
             const contextMessage = {
               role: "user",
-              content: `${postContent}\n\nNow, please respond to my prompt: ${userMessage}\n\n${specialInstructions}`,
+              content: `${postContent}\n\nNow, please respond to my prompt: ${userMessage}`,
             };
             enhancedMessages = [contextMessage];
           }
@@ -585,6 +597,8 @@
             this.callGeminiAPI(apiKey, enhancedMessages, messages);
           } else if (selectedLLM === "openai") {
             this.callOpenAIAPI(apiKey, enhancedMessages, messages);
+          } else if (selectedLLM === "anthropic") {
+            this.callClaudeAPI(apiKey, enhancedMessages, messages);
           } else {
             this.setState({
               isLoading: false,
@@ -607,6 +621,13 @@
         }));
 
         const requestBody = {
+          system_instruction: {
+            parts: [
+              {
+                text: "You are Gemini, an AI assistant. Please format your response in lightweight markdown (no HTML tags).",
+              },
+            ],
+          },
           contents: contents,
         };
 
@@ -748,6 +769,87 @@
           })
           .catch((error) => {
             console.error("Error calling OpenAI API:", error);
+            this.setState({
+              isLoading: false,
+              error: error.message,
+            });
+          });
+      },
+
+      callClaudeAPI: function (apiKey, enhancedMessages, originalMessages) {
+        const url = LLM_CHATBOTS["anthropic"].apiBaseUrl;
+        // Anthropic expects a single string prompt, but supports message history in v1/messages
+        // We'll convert our messages to Anthropic's format
+        const systemPrompt =
+          "You are Claude, an AI assistant. Please format your response in lightweight markdown (no HTML tags).";
+        const messages = enhancedMessages.map((message) => ({
+          role: message.role === "user" ? "user" : "assistant",
+          content: message.content,
+        }));
+        const requestBody = {
+          model: "claude-opus-4-20250514",
+          max_tokens: 4000,
+          temperature: 0.7,
+          system: systemPrompt,
+          messages: messages,
+        };
+        // Log the request for debugging (remove in production)
+        console.log(
+          "Claude API Request:",
+          JSON.stringify(requestBody, null, 2)
+        );
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify(requestBody),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Log the response for debugging (remove in production)
+            console.log("Claude API Response:", JSON.stringify(data, null, 2));
+            if (
+              data.content &&
+              Array.isArray(data.content) &&
+              data.content[0] &&
+              data.content[0].text
+            ) {
+              const assistantMessage = data.content[0].text;
+              const updatedMessages = [
+                ...originalMessages,
+                { role: "assistant", content: assistantMessage },
+              ];
+              // Anthropic does not return token usage in the same way
+              const totalTokenCount = data.usage?.output_tokens || 0;
+              // Cache the updated messages for the current post
+              const postKey = getCurrentPostKey();
+              if (postKey) {
+                setCachedChatResponses(
+                  postKey,
+                  updatedMessages,
+                  totalTokenCount,
+                  "anthropic"
+                );
+              }
+              this.setState({
+                messages: updatedMessages,
+                isLoading: false,
+                totalTokenCount: totalTokenCount,
+              });
+            } else {
+              throw new Error("Invalid response format from Claude API");
+            }
+          })
+          .catch((error) => {
+            console.error("Error calling Claude API:", error);
             this.setState({
               isLoading: false,
               error: error.message,
@@ -1372,14 +1474,16 @@
           repositoryContent,
         } = this.state;
 
-        const contentPromises = [
-          Promise.resolve(
-            "Here are some examples of my writing style from previous content:\n\n"
-          ),
-        ];
+        const contentPromises = [];
 
         // Load selected post content
         if (selectedPosts.length > 0) {
+          contentPromises.push(
+            Promise.resolve(
+              "Here are some examples of my writing style from previous content:\n\n"
+            )
+          );
+
           const selectedContentObjects = posts.filter((post) =>
             selectedPosts.includes(post.name)
           );
