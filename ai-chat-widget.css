@@ -42,13 +42,9 @@
 }
 
 .ai-chat-widget.fullscreen .input-area {
-  position: sticky !important;
-  bottom: 0 !important;
   left: 0;
   width: 100%;
-  background: #fff;
   z-index: 10000;
-  border-top: 1px solid #e1e5e9;
 }
 
 .fullscreen-toggle {
