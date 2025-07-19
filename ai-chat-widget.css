@@ -526,7 +526,7 @@
 }
 
 /* Responsive Design: Small mobile */
-@media (max-width: 450px) {
+@media (max-width: 380px) {
   .llm-api-row {
     flex-direction: column;
     gap: 12px;
