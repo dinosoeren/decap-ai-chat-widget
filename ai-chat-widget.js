@@ -804,6 +804,7 @@
           headers: {
             "Content-Type": "application/json",
             "x-api-key": apiKey,
+            "anthropic-dangerous-direct-browser-access": "true",
             "anthropic-version": "2023-06-01",
           },
           body: JSON.stringify(requestBody),
