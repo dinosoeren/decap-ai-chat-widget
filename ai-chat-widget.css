@@ -51,21 +51,9 @@
   border-top: 1px solid #e1e5e9;
 }
 
-.fullscreen-toggle-button {
-  background: #007cba;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 18px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-left: 12px;
-}
-
-.fullscreen-toggle-button:hover {
-  background: #005a87;
+.fullscreen-toggle {
+  margin-left: auto;
+  margin-right: 0;
 }
 
 /* API Key Section */
@@ -113,7 +101,7 @@
   box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
 }
 
-.api-key-input {
+.text-input {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
@@ -122,10 +110,15 @@
   box-sizing: border-box;
 }
 
-.api-key-input:focus {
+.text-input:focus {
   outline: none;
   border-color: #007cba;
   box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
+}
+
+/* Username input with bottom margin */
+.text-input.username-input {
+  margin-bottom: 12px;
 }
 
 /* Post Toggle Button Styles */
@@ -176,7 +169,7 @@
   font-size: 14px;
 }
 
-.post-dropdown {
+.dropdown {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
@@ -189,13 +182,13 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.post-dropdown:focus {
+.dropdown:focus {
   outline: none;
   border-color: #007cba;
   box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.15);
 }
 
-.post-dropdown option {
+.dropdown option {
   padding: 8px 12px;
   font-size: 14px;
 }
@@ -222,6 +215,9 @@
 }
 
 .conversation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 8px 16px;
   background: #e9ecef;
   border-bottom: 1px solid #dee2e6;
@@ -476,8 +472,7 @@
   margin-top: 8px;
 }
 
-.clear-cache-button,
-.clear-chat-cache-button {
+.sm-flex-button {
   background: #6c757d;
   color: white;
   border: none;
@@ -490,23 +485,25 @@
   flex: 1;
 }
 
-.clear-cache-button:hover:not(:disabled),
-.clear-chat-cache-button:hover:not(:disabled) {
+.sm-flex-button:hover:not(:disabled) {
   background: #5a6268;
 }
 
-.clear-cache-button:disabled,
-.clear-chat-cache-button:disabled {
+.sm-flex-button:disabled {
   background: #adb5bd;
   cursor: not-allowed;
 }
 
-.clear-chat-cache-button {
+.clear-all {
   background: #dc3545;
 }
 
-.clear-chat-cache-button:hover:not(:disabled) {
+.clear-all:hover:not(:disabled) {
   background: #c82333;
+}
+
+.sm-flex-button.load-repositories {
+  margin-bottom: 16px;
 }
 
 /* Responsive Design: Medium mobile */
@@ -514,7 +511,10 @@
   .message-content {
     max-width: 90%;
   }
+}
 
+/* Responsive Design: Small mobile */
+@media (max-width: 380px) {
   .button-group {
     flex-direction: column;
   }
@@ -523,10 +523,7 @@
   .clear-button {
     width: 100%;
   }
-}
 
-/* Responsive Design: Small mobile */
-@media (max-width: 380px) {
   .llm-api-row {
     flex-direction: column;
     gap: 12px;
@@ -543,7 +540,7 @@
   }
 
   .llm-dropdown,
-  .api-key-input {
+  .text-input {
     width: 100%;
     box-sizing: border-box;
   }
@@ -591,7 +588,10 @@
 }
 
 /* Repository content styling */
-.repository-content-section .post-dropdown option {
+.repository-content-section .dropdown {
+  margin-bottom: 12px;
+}
+.repository-content-section .dropdown option {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 13px;
 }
@@ -660,6 +660,24 @@
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 13px;
   color: #333;
+}
+
+/* Checkbox label styling */
+.checkbox-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+/* Checkbox input styling */
+.checkbox-input {
+  margin-right: 6px;
+}
+
+/* Go up button styling */
+.sm-flex-button.go-up-button {
+  margin-bottom: 8px;
+  font-size: 12px;
 }
 
 /* Responsive adjustments for code samples */

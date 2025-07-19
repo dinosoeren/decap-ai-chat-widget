@@ -1602,22 +1602,7 @@
 
         return h(
           "div",
-          {
-            className: "ai-chat-widget" + (isFullscreen ? " fullscreen" : ""),
-            style: isFullscreen
-              ? {
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  width: "100vw",
-                  height: "100vh",
-                  zIndex: 9999,
-                  borderRadius: 0,
-                  margin: 0,
-                  background: "#fff",
-                }
-              : {},
-          },
+          { className: "ai-chat-widget" + (isFullscreen ? " fullscreen" : "") },
 
           // Post selection toggle button
           h(
@@ -1675,7 +1660,7 @@
                           ].selected = false;
                         }
                       },
-                      className: "post-dropdown",
+                      className: "dropdown",
                     },
                     posts.map((post) => {
                       const date = post.lastmod
@@ -1709,7 +1694,7 @@
                   {
                     onClick: this.clearPostsCache,
                     disabled: isLoading,
-                    className: "clear-cache-button",
+                    className: "sm-flex-button",
                     title: "Clear cached content (refreshes from GitHub API)",
                   },
                   "Clear Post Cache"
@@ -1719,7 +1704,7 @@
                   {
                     onClick: clearAllChatResponseCaches,
                     disabled: isLoading,
-                    className: "clear-chat-cache-button",
+                    className: "sm-flex-button clear-all",
                     title: "Clear all chat response caches across all posts",
                   },
                   "Clear All Chat Caches"
@@ -1770,19 +1755,12 @@
                   value: username,
                   onChange: this.handleUsernameChange,
                   placeholder: "Enter GitHub username",
-                  className: "api-key-input",
-                  style: { marginBottom: "12px" },
+                  className: "text-input username-input",
                 }),
                 // Include forks checkbox
                 h(
                   "label",
-                  {
-                    style: {
-                      display: "block",
-                      marginBottom: "8px",
-                      fontSize: "13px",
-                    },
-                  },
+                  { className: "checkbox-label" },
                   h("input", {
                     type: "checkbox",
                     checked: includeForks,
@@ -1792,7 +1770,7 @@
                         this.loadRepositories
                       );
                     },
-                    style: { marginRight: "6px" },
+                    className: "checkbox-input",
                   }),
                   "Include forked repositories"
                 ),
@@ -1801,8 +1779,7 @@
                   {
                     onClick: this.loadRepositories,
                     disabled: loadingRepositories || !username.trim(),
-                    className: "clear-cache-button",
-                    style: { marginBottom: "16px" },
+                    className: "sm-flex-button load-repositories",
                   },
                   loadingRepositories ? "Loading..." : "Load Repositories"
                 )
@@ -1824,8 +1801,7 @@
                       id: this.props.forID + "-repo-select",
                       value: selectedRepository,
                       onChange: this.handleRepositoryChange,
-                      className: "post-dropdown",
-                      style: { marginBottom: "12px" },
+                      className: "dropdown",
                     },
                     h("option", { value: "" }, "Choose a repository..."),
                     repositories.map((repo) => {
@@ -1862,8 +1838,7 @@
                         "button",
                         {
                           onClick: this.navigateUp,
-                          className: "clear-cache-button",
-                          style: { marginBottom: "8px", fontSize: "12px" },
+                          className: "sm-flex-button go-up-button",
                         },
                         "← Go Up"
                       ),
@@ -1921,7 +1896,7 @@
                               ),
                               value: selectedCodeFiles,
                               onChange: this.handleCodeFileSelection,
-                              className: "post-dropdown",
+                              className: "dropdown",
                             },
                             repositoryContent
                               .filter((item) => item.type === "file")
@@ -1955,7 +1930,7 @@
                   {
                     onClick: clearCodeSamplesCache,
                     disabled: isLoading,
-                    className: "clear-cache-button",
+                    className: "sm-flex-button",
                     title: "Clear cached repositories and file content",
                   },
                   "Clear Code Cache"
@@ -2012,7 +1987,7 @@
                   placeholder: `Enter your ${
                     LLM_CHATBOTS[selectedLLM]?.name || "LLM"
                   } API key`,
-                  className: "api-key-input",
+                  className: "text-input",
                 })
               )
             )
@@ -2021,23 +1996,11 @@
           // Chat Interface
           h(
             "div",
-            {
-              className: "chat-container",
-              style: isFullscreen
-                ? { height: "calc(100vh - 0px)", minHeight: 0, flex: 1 }
-                : {},
-            },
+            { className: "chat-container" },
             // Conversation Header + Fullscreen Button
             h(
               "div",
-              {
-                className: "conversation-header",
-                style: {
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                },
-              },
+              { className: "conversation-header" },
               h(
                 "span",
                 { className: "message-count" },
@@ -2055,9 +2018,8 @@
                 "button",
                 {
                   onClick: this.toggleFullscreen,
-                  className: "fullscreen-toggle-button post-toggle-button",
+                  className: "post-toggle-button fullscreen-toggle",
                   title: isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen",
-                  style: { marginLeft: "auto", marginRight: 0 },
                 },
                 isFullscreen ? "🗗" : "🗖"
               )
@@ -2065,12 +2027,7 @@
             // Messages Area
             h(
               "div",
-              {
-                className: "messages-container",
-                style: isFullscreen
-                  ? { maxHeight: "none", flex: 1, minHeight: 0 }
-                  : {},
-              },
+              { className: "messages-container" },
               messages.length === 0 &&
                 h(
                   "div",
@@ -2118,10 +2075,7 @@
             // Input Area
             h(
               "div",
-              {
-                className: "input-area",
-                style: isFullscreen ? { flexShrink: 0 } : {},
-              },
+              { className: "input-area" },
               h("textarea", {
                 value: currentMessage,
                 onChange: this.handleMessageChange,
