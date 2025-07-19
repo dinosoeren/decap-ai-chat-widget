@@ -1568,7 +1568,9 @@
       },
 
       toggleFullscreen: function () {
-        this.setState((prevState) => ({ isFullscreen: !prevState.isFullscreen }));
+        this.setState((prevState) => ({
+          isFullscreen: !prevState.isFullscreen,
+        }));
       },
 
       render: function () {
@@ -1601,8 +1603,7 @@
         return h(
           "div",
           {
-            className:
-              "ai-chat-widget" + (isFullscreen ? " fullscreen" : ""),
+            className: "ai-chat-widget" + (isFullscreen ? " fullscreen" : ""),
             style: isFullscreen
               ? {
                   position: "fixed",
@@ -2020,17 +2021,29 @@
           // Chat Interface
           h(
             "div",
-            { className: "chat-container" + (isFullscreen ? " fullscreen" : "") ,
-              style: isFullscreen ? { height: "calc(100vh - 0px)", minHeight: 0, flex: 1 } : {}
+            {
+              className: "chat-container",
+              style: isFullscreen
+                ? { height: "calc(100vh - 0px)", minHeight: 0, flex: 1 }
+                : {},
             },
             // Conversation Header + Fullscreen Button
             h(
               "div",
-              { className: "conversation-header", style: { display: "flex", alignItems: "center", justifyContent: "space-between" } },
+              {
+                className: "conversation-header",
+                style: {
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                },
+              },
               h(
                 "span",
                 { className: "message-count" },
-                `${messages.length} message${messages.length !== 1 ? "s" : ""} in conversation`
+                `${messages.length} message${
+                  messages.length !== 1 ? "s" : ""
+                } in conversation`
               ),
               totalTokenCount > 0 &&
                 h(
@@ -2052,7 +2065,12 @@
             // Messages Area
             h(
               "div",
-              { className: "messages-container" + (isFullscreen ? " fullscreen" : ""), style: isFullscreen ? { maxHeight: "none", flex: 1, minHeight: 0 } : {} },
+              {
+                className: "messages-container",
+                style: isFullscreen
+                  ? { maxHeight: "none", flex: 1, minHeight: 0 }
+                  : {},
+              },
               messages.length === 0 &&
                 h(
                   "div",
@@ -2100,7 +2118,10 @@
             // Input Area
             h(
               "div",
-              { className: "input-area" + (isFullscreen ? " fullscreen" : ""), style: isFullscreen ? { flexShrink: 0 } : {} },
+              {
+                className: "input-area",
+                style: isFullscreen ? { flexShrink: 0 } : {},
+              },
               h("textarea", {
                 value: currentMessage,
                 onChange: this.handleMessageChange,
