@@ -53,10 +53,6 @@
   box-shadow: none !important;
 }
 
-.ai-chat-widget.fullscreen .api-key-section {
-  display: none;
-}
-
 .ai-chat-widget.fullscreen .chat-container {
   height: unset !important;
   min-height: none !important;
@@ -102,8 +98,13 @@
   flex: 0 0 120px;
 }
 
-.api-key-input-container {
+.api-key-container {
   flex: 1;
+  position: relative;
+}
+
+.api-key-input-container {
+  display: flex;
 }
 
 .api-key-section label {
@@ -112,6 +113,61 @@
   margin-bottom: 8px;
   color: #333;
   font-size: 14px;
+}
+
+.confirm-api-key-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background-color 0.2s;
+}
+
+.confirm-api-key-button:hover:not(:disabled) {
+  background: #218838;
+}
+
+.confirm-api-key-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.ai-chat-widget:not(.api-key-visible) .api-key-section {
+  display: none;
+}
+
+.change-llm-button {
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: 6px;
+  right: 36px;
+  background: #6c757d;
+  color: white;
+  border: 1px solid white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  z-index: 1001;
+}
+
+.ai-chat-widget:not(.api-key-visible) .change-llm-button {
+  display: block;
+}
+
+.change-llm-button:hover {
+  background: #5a6268;
 }
 
 .llm-dropdown {
@@ -567,7 +623,7 @@
     width: 100%;
   }
 
-  .api-key-input-container {
+  .api-key-container {
     flex: none;
     width: 100%;
   }

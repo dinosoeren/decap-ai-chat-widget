@@ -41,6 +41,7 @@
     REPOSITORIES_LIST: "ai_chat_repositories_list_",
     REPOSITORY_CONTENT: "ai_chat_repository_content_",
     CODE_SAMPLES_CACHE: "ai_chat_code_samples_cache_",
+    API_KEYS: "ai_chat_api_keys",
   };
 
   // Cache utility functions
@@ -370,6 +371,8 @@
         return {
           selectedLLM: "gemini", // Default to Gemini
           apiKey: "", // Never commit API keys to version control
+          apiKeyInput: "",
+          showApiKeySection: true,
           messages: [],
           currentMessage: "",
           isLoading: false,
@@ -395,18 +398,44 @@
         };
       },
 
+      handleClickChangeLLM: function () {
+        this.setState({ showApiKeySection: true });
+      },
+
       handleLLMChange: function (e) {
         const selectedLLM = e.target.value;
-        this.setState({ selectedLLM }, () => {
-          // Load cached responses for the new model
-          this.loadCachedChatResponses();
-        });
+        const apiKeys =
+          JSON.parse(localStorage.getItem(CACHE_KEYS.API_KEYS)) || {};
+        this.setState(
+          {
+            selectedLLM,
+            apiKey: apiKeys[selectedLLM] || "",
+            apiKeyInput: apiKeys[selectedLLM] || "",
+          },
+          () => {
+            // Load cached responses for the new model
+            this.loadCachedChatResponses();
+          }
+        );
       },
 
       handleApiKeyChange: function (e) {
-        const apiKey = e.target.value;
-        this.setState({ apiKey });
-        // Don't save API key to frontmatter
+        this.setState({ apiKeyInput: e.target.value });
+      },
+
+      handleConfirmApiKey: function () {
+        const { apiKeyInput, selectedLLM } = this.state;
+        if (!apiKeyInput.trim()) return;
+
+        this.setState({
+          apiKey: apiKeyInput,
+          showApiKeySection: false,
+        });
+
+        const apiKeys =
+          JSON.parse(localStorage.getItem(CACHE_KEYS.API_KEYS)) || {};
+        apiKeys[selectedLLM] = apiKeyInput;
+        localStorage.setItem(CACHE_KEYS.API_KEYS, JSON.stringify(apiKeys));
       },
 
       handleMessageChange: function (e) {
@@ -451,6 +480,15 @@
       },
 
       componentDidMount: function () {
+        const apiKeys =
+          JSON.parse(localStorage.getItem(CACHE_KEYS.API_KEYS)) || {};
+        if (apiKeys && apiKeys[this.state.selectedLLM]) {
+          this.setState({
+            apiKey: apiKeys[this.state.selectedLLM],
+            apiKeyInput: apiKeys[this.state.selectedLLM],
+            showApiKeySection: false,
+          });
+        }
         this.loadCachedChatResponses();
         this.loadCachedCodeSamples();
       },
@@ -1587,6 +1625,7 @@
           isCollapsed,
           selectedLLM,
           apiKey,
+          showApiKeySection,
           messages,
           currentMessage,
           isLoading,
@@ -1612,7 +1651,8 @@
         const widgetClassName =
           "ai-chat-widget" +
           (isFullscreen ? " fullscreen" : "") +
-          (!isFullscreen && isCollapsed ? " collapsed" : "");
+          (!isFullscreen && isCollapsed ? " collapsed" : "") +
+          (showApiKeySection ? " api-key-visible" : "");
 
         return h(
           "div",
@@ -2005,24 +2045,51 @@
                 ),
                 h(
                   "div",
-                  { className: "api-key-input-container" },
+                  { className: "api-key-container" },
                   h(
                     "label",
                     { htmlFor: this.props.forID + "-api-key" },
                     "API Key:"
                   ),
-                  h("input", {
-                    id: this.props.forID + "-api-key",
-                    type: "password",
-                    value: apiKey,
-                    onChange: this.handleApiKeyChange,
-                    placeholder: `Enter your ${
-                      LLM_CHATBOTS[selectedLLM]?.name || "LLM"
-                    } API key`,
-                    className: "text-input",
-                  })
+                  h(
+                    "div",
+                    { className: "api-key-input-container" },
+                    h("input", {
+                      id: this.props.forID + "-api-key",
+                      type: "password",
+                      value: this.state.apiKeyInput,
+                      onChange: this.handleApiKeyChange,
+                      onKeyPress: (e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          this.handleConfirmApiKey();
+                        }
+                      },
+                      placeholder: `Enter your ${
+                        LLM_CHATBOTS[selectedLLM]?.name || "LLM"
+                      } API key`,
+                      className: "text-input",
+                    }),
+                    h(
+                      "button",
+                      {
+                        className: "confirm-api-key-button",
+                        onClick: this.handleConfirmApiKey,
+                        disabled: !this.state.apiKeyInput.trim(),
+                      },
+                      "✓"
+                    )
+                  )
                 )
               )
+            ),
+            h(
+              "button",
+              {
+                className: "change-llm-button",
+                onClick: this.handleClickChangeLLM,
+              },
+              "Change LLM"
             ),
 
             // Chat Interface
