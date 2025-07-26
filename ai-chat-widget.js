@@ -390,7 +390,8 @@
           loadingRepositoryContent: false,
           showCodeSamplesSelector: false,
           includeForks: false,
-          isFullscreen: false, // Add fullscreen state
+          isFullscreen: false, // Fullscreen state
+          isCollapsed: true, // Collapsed state for floating mode
         };
       },
 
@@ -1574,8 +1575,16 @@
         }));
       },
 
+      toggleCollapse: function () {
+        this.setState((prevState) => ({
+          isCollapsed: !prevState.isCollapsed,
+        }));
+      },
+
       render: function () {
         const {
+          isFullscreen,
+          isCollapsed,
           selectedLLM,
           apiKey,
           messages,
@@ -1598,518 +1607,543 @@
           loadingRepositoryContent,
           showCodeSamplesSelector,
           includeForks,
-          isFullscreen,
         } = this.state;
+
+        const widgetClassName =
+          "ai-chat-widget" +
+          (isFullscreen ? " fullscreen" : "") +
+          (!isFullscreen && isCollapsed ? " collapsed" : "");
 
         return h(
           "div",
-          { className: "ai-chat-widget" + (isFullscreen ? " fullscreen" : "") },
+          { className: widgetClassName },
 
-          // Post selection toggle button
-          h(
-            "div",
-            { className: "post-toggle-section" },
-            h(
-              "button",
-              {
-                type: "button",
-                onClick: this.togglePostSelector,
-                className: "post-toggle-button",
-              },
-              showPostSelector
-                ? "Hide Content Examples"
-                : "Show Content Examples"
-            ),
-            selectedPosts.length > 0 &&
-              h(
-                "span",
-                { className: "selected-count" },
-                ` (${selectedPosts.length} selected)`
-              )
-          ),
-
-          // Post selection dropdown (hidden by default)
-          showPostSelector &&
+          // Floating Widget Header (not shown in fullscreen)
+          !isFullscreen &&
             h(
               "div",
-              { className: "post-selection-section" },
-              h(
-                "label",
-                { htmlFor: this.props.forID + "-post-select" },
-                "Select up to 3 posts as writing examples:"
-              ),
-              loadingPosts
-                ? h("div", { className: "loading-posts" }, "Loading posts...")
-                : h(
-                    "select",
-                    {
-                      id: this.props.forID + "-post-select",
-                      multiple: true,
-                      size: Math.min(6, posts.length),
-                      value: selectedPosts,
-                      onChange: (e) => {
-                        // Limit to 3 selections
-                        const options = Array.from(
-                          e.target.selectedOptions
-                        ).map((opt) => opt.value);
-                        if (options.length <= 3) {
-                          this.handlePostSelection(e);
-                        } else {
-                          // Deselect the last selected if over limit
-                          e.target.options[
-                            e.target.selectedIndex
-                          ].selected = false;
-                        }
-                      },
-                      className: "dropdown",
-                    },
-                    posts.map((post) => {
-                      const date = post.lastmod
-                        ? new Date(post.lastmod).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })
-                        : "";
-                      const displayText = date
-                        ? `${post.name} (${date})`
-                        : post.name;
-
-                      return h(
-                        "option",
-                        { key: post.name, value: post.name },
-                        displayText
-                      );
-                    })
-                  ),
-              h(
-                "div",
-                { className: "post-selection-note" },
-                "(You can select up to 3 posts. These will be included as writing examples in the prompt.)"
-              ),
-              h(
-                "div",
-                { className: "cache-buttons" },
-                h(
-                  "button",
-                  {
-                    onClick: this.clearPostsCache,
-                    disabled: isLoading,
-                    className: "sm-flex-button",
-                    title: "Clear cached content (refreshes from GitHub API)",
-                  },
-                  "Clear Post Cache"
-                ),
-                h(
-                  "button",
-                  {
-                    onClick: clearAllChatResponseCaches,
-                    disabled: isLoading,
-                    className: "sm-flex-button clear-all",
-                    title: "Clear all chat response caches across all posts",
-                  },
-                  "Clear All Chat Caches"
-                )
-              )
+              { className: "widget-header", onClick: this.toggleCollapse },
+              h("span", {}, "Content Assistant"),
+              h("span", {}, isCollapsed ? "↑" : "↓")
             ),
 
-          // Code samples toggle button
+          // Main widget body.
           h(
             "div",
-            { className: "post-toggle-section" },
-            h(
-              "button",
-              {
-                type: "button",
-                onClick: this.toggleCodeSamplesSelector,
-                className: "post-toggle-button",
-              },
-              showCodeSamplesSelector
-                ? "Hide Code Samples"
-                : "Show Code Samples"
-            ),
-            selectedCodeFiles.length > 0 &&
-              h(
-                "span",
-                { className: "selected-count" },
-                ` (${selectedCodeFiles.length} selected)`
-              )
-          ),
+            { className: "widget-body" },
 
-          // Code samples selector (hidden by default)
-          showCodeSamplesSelector &&
+            // Post selection toggle button
             h(
               "div",
-              { className: "post-selection-section" },
-              // Username input
-              h(
-                "div",
-                { className: "username-section" },
-                h(
-                  "label",
-                  { htmlFor: this.props.forID + "-username" },
-                  "GitHub Username:"
-                ),
-                h("input", {
-                  id: this.props.forID + "-username",
-                  type: "text",
-                  value: username,
-                  onChange: this.handleUsernameChange,
-                  placeholder: "Enter GitHub username",
-                  className: "text-input username-input",
-                }),
-                // Include forks checkbox
-                h(
-                  "label",
-                  { className: "checkbox-label" },
-                  h("input", {
-                    type: "checkbox",
-                    checked: includeForks,
-                    onChange: (e) => {
-                      this.setState(
-                        { includeForks: e.target.checked },
-                        this.loadRepositories
-                      );
-                    },
-                    className: "checkbox-input",
-                  }),
-                  "Include forked repositories"
-                ),
-                h(
-                  "button",
-                  {
-                    onClick: this.loadRepositories,
-                    disabled: loadingRepositories || !username.trim(),
-                    className: "sm-flex-button load-repositories",
-                  },
-                  loadingRepositories ? "Loading..." : "Load Repositories"
-                )
-              ),
-
-              // Repository selector
-              repositories.length > 0 &&
-                h(
-                  "div",
-                  { className: "repository-section" },
-                  h(
-                    "label",
-                    { htmlFor: this.props.forID + "-repo-select" },
-                    "Select Repository:"
-                  ),
-                  h(
-                    "select",
-                    {
-                      id: this.props.forID + "-repo-select",
-                      value: selectedRepository,
-                      onChange: this.handleRepositoryChange,
-                      className: "dropdown",
-                    },
-                    h("option", { value: "" }, "Choose a repository..."),
-                    repositories.map((repo) => {
-                      const date = new Date(repo.updatedAt).toLocaleDateString(
-                        "en-US",
-                        {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        }
-                      );
-                      const displayText = `${repo.name} (${repo.language}) - Updated ${date}`;
-
-                      return h(
-                        "option",
-                        { key: repo.name, value: repo.name },
-                        displayText
-                      );
-                    })
-                  )
-                ),
-
-              // Repository content browser
-              selectedRepository &&
-                h(
-                  "div",
-                  { className: "repository-content-section" },
-                  // Breadcrumb navigation
-                  currentPath &&
-                    h(
-                      "div",
-                      { className: "breadcrumb-section" },
-                      h(
-                        "button",
-                        {
-                          onClick: this.navigateUp,
-                          className: "sm-flex-button go-up-button",
-                        },
-                        "← Go Up"
-                      ),
-                      h(
-                        "div",
-                        { className: "current-path" },
-                        `Current path: ${currentPath || "root"}`
-                      )
-                    ),
-
-                  // File/directory list
-                  h(
-                    "div",
-                    { className: "file-list-section" },
-                    h(
-                      "label",
-                      { htmlFor: this.props.forID + "-file-select" },
-                      "Select up to 10 code files:"
-                    ),
-                    loadingRepositoryContent
-                      ? h(
-                          "div",
-                          { className: "loading-posts" },
-                          "Loading files..."
-                        )
-                      : h(
-                          "div",
-                          { className: "file-list-container" },
-                          // Directories first
-                          repositoryContent
-                            .filter((item) => item.type === "dir")
-                            .map((item) =>
-                              h(
-                                "div",
-                                {
-                                  key: item.path,
-                                  className: "file-item directory-item",
-                                  onClick: () => this.navigateToPath(item.path),
-                                },
-                                h("span", { className: "file-icon" }, "📁"),
-                                h("span", { className: "file-name" }, item.name)
-                              )
-                            ),
-                          // Then files
-                          h(
-                            "select",
-                            {
-                              id: this.props.forID + "-file-select",
-                              multiple: true,
-                              size: Math.min(
-                                8,
-                                repositoryContent.filter(
-                                  (item) => item.type === "file"
-                                ).length + 1
-                              ),
-                              value: selectedCodeFiles,
-                              onChange: this.handleCodeFileSelection,
-                              className: "dropdown",
-                            },
-                            repositoryContent
-                              .filter((item) => item.type === "file")
-                              .map((item) => {
-                                const size = ` (${this.formatFileSize(
-                                  item.size
-                                )})`;
-                                const displayText = `📄 ${item.name}${size}`;
-
-                                return h(
-                                  "option",
-                                  { key: item.path, value: item.name },
-                                  displayText
-                                );
-                              })
-                          )
-                        )
-                  )
-                ),
-
-              h(
-                "div",
-                { className: "post-selection-note" },
-                "(You can select up to 10 code files. These will be included as code examples in the prompt.)"
-              ),
-              h(
-                "div",
-                { className: "cache-buttons" },
-                h(
-                  "button",
-                  {
-                    onClick: clearCodeSamplesCache,
-                    disabled: isLoading,
-                    className: "sm-flex-button",
-                    title: "Clear cached repositories and file content",
-                  },
-                  "Clear Code Cache"
-                )
-              )
-            ),
-
-          // LLM Selection and API Key Input
-          h(
-            "div",
-            { className: "api-key-section" },
-            h(
-              "div",
-              { className: "llm-api-row" },
-              h(
-                "div",
-                { className: "llm-selector" },
-                h(
-                  "label",
-                  { htmlFor: this.props.forID + "-llm-select" },
-                  "LLM:"
-                ),
-                h(
-                  "select",
-                  {
-                    id: this.props.forID + "-llm-select",
-                    value: selectedLLM,
-                    onChange: this.handleLLMChange,
-                    className: "llm-dropdown",
-                  },
-                  Object.keys(LLM_CHATBOTS).map((llmKey) => {
-                    const llm = LLM_CHATBOTS[llmKey];
-                    return h(
-                      "option",
-                      { key: llmKey, value: llmKey },
-                      llm.name
-                    );
-                  })
-                )
-              ),
-              h(
-                "div",
-                { className: "api-key-input-container" },
-                h(
-                  "label",
-                  { htmlFor: this.props.forID + "-api-key" },
-                  "API Key:"
-                ),
-                h("input", {
-                  id: this.props.forID + "-api-key",
-                  type: "password",
-                  value: apiKey,
-                  onChange: this.handleApiKeyChange,
-                  placeholder: `Enter your ${
-                    LLM_CHATBOTS[selectedLLM]?.name || "LLM"
-                  } API key`,
-                  className: "text-input",
-                })
-              )
-            )
-          ),
-
-          // Chat Interface
-          h(
-            "div",
-            { className: "chat-container" },
-            // Conversation Header + Fullscreen Button
-            h(
-              "div",
-              { className: "conversation-header" },
-              h(
-                "span",
-                { className: "message-count" },
-                `${messages.length} message${
-                  messages.length !== 1 ? "s" : ""
-                } in conversation`
-              ),
-              totalTokenCount > 0 &&
-                h(
-                  "span",
-                  { className: "token-count" },
-                  ` • ${totalTokenCount.toLocaleString()} tokens used`
-                ),
+              { className: "post-toggle-section" },
               h(
                 "button",
                 {
-                  onClick: this.toggleFullscreen,
-                  className: "post-toggle-button fullscreen-toggle",
-                  title: isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen",
+                  type: "button",
+                  onClick: this.togglePostSelector,
+                  className: "post-toggle-button",
                 },
-                isFullscreen ? "🗗" : "🗖"
-              )
-            ),
-            // Messages Area
-            h(
-              "div",
-              { className: "messages-container" },
-              messages.length === 0 &&
+                showPostSelector
+                  ? "Hide Content Examples"
+                  : "Show Content Examples"
+              ),
+              selectedPosts.length > 0 &&
                 h(
-                  "div",
-                  { className: "empty-state" },
-                  h(
-                    "p",
-                    {},
-                    "Start a conversation with AI. Enter your API key above and type a message below."
-                  )
-                ),
-              messages.map((message, index) => {
-                const isUser = message.role === "user";
-                return h(
-                  "div",
-                  {
-                    key: index,
-                    className:
-                      "message " +
-                      (isUser ? "user-message" : "assistant-message"),
-                  },
-                  h(
-                    "div",
-                    { className: "message-content" },
-                    isUser
-                      ? message.content
-                      : this.renderSimpleMarkdown(message.content)
-                  )
-                );
-              }),
-              isLoading &&
-                h(
-                  "div",
-                  { className: "message assistant-message" },
-                  h(
-                    "div",
-                    { className: "message-content loading" },
-                    "Thinking..."
-                  )
+                  "span",
+                  { className: "selected-count" },
+                  ` (${selectedPosts.length} selected)`
                 )
             ),
 
-            // Error Display
-            error && h("div", { className: "error-message" }, error),
-
-            // Input Area
-            h(
-              "div",
-              { className: "input-area" },
-              h("textarea", {
-                value: currentMessage,
-                onChange: this.handleMessageChange,
-                onKeyPress: this.handleKeyPress,
-                placeholder: "Type your message here...",
-                disabled: isLoading || !apiKey.trim(),
-                className: "message-input",
-              }),
+            // Post selection dropdown (hidden by default)
+            showPostSelector &&
               h(
                 "div",
-                { className: "button-group" },
+                { className: "post-selection-section" },
                 h(
-                  "button",
-                  {
-                    onClick: this.handleSendMessage,
-                    disabled:
-                      isLoading || !currentMessage.trim() || !apiKey.trim(),
-                    className: "send-button",
-                  },
-                  "Send"
+                  "label",
+                  { htmlFor: this.props.forID + "-post-select" },
+                  "Select up to 3 posts as writing examples:"
+                ),
+                loadingPosts
+                  ? h("div", { className: "loading-posts" }, "Loading posts...")
+                  : h(
+                      "select",
+                      {
+                        id: this.props.forID + "-post-select",
+                        multiple: true,
+                        size: Math.min(6, posts.length),
+                        value: selectedPosts,
+                        onChange: (e) => {
+                          // Limit to 3 selections
+                          const options = Array.from(
+                            e.target.selectedOptions
+                          ).map((opt) => opt.value);
+                          if (options.length <= 3) {
+                            this.handlePostSelection(e);
+                          } else {
+                            // Deselect the last selected if over limit
+                            e.target.options[
+                              e.target.selectedIndex
+                            ].selected = false;
+                          }
+                        },
+                        className: "dropdown",
+                      },
+                      posts.map((post) => {
+                        const date = post.lastmod
+                          ? new Date(post.lastmod).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "";
+                        const displayText = date
+                          ? `${post.name} (${date})`
+                          : post.name;
+
+                        return h(
+                          "option",
+                          { key: post.name, value: post.name },
+                          displayText
+                        );
+                      })
+                    ),
+                h(
+                  "div",
+                  { className: "post-selection-note" },
+                  "(You can select up to 3 posts. These will be included as writing examples in the prompt.)"
                 ),
                 h(
+                  "div",
+                  { className: "cache-buttons" },
+                  h(
+                    "button",
+                    {
+                      onClick: this.clearPostsCache,
+                      disabled: isLoading,
+                      className: "sm-flex-button",
+                      title: "Clear cached content (refreshes from GitHub API)",
+                    },
+                    "Clear Post Cache"
+                  ),
+                  h(
+                    "button",
+                    {
+                      onClick: clearAllChatResponseCaches,
+                      disabled: isLoading,
+                      className: "sm-flex-button clear-all",
+                      title: "Clear all chat response caches across all posts",
+                    },
+                    "Clear All Chat Caches"
+                  )
+                )
+              ),
+
+            // Code samples toggle button
+            h(
+              "div",
+              { className: "post-toggle-section" },
+              h(
+                "button",
+                {
+                  type: "button",
+                  onClick: this.toggleCodeSamplesSelector,
+                  className: "post-toggle-button",
+                },
+                showCodeSamplesSelector
+                  ? "Hide Code Samples"
+                  : "Show Code Samples"
+              ),
+              selectedCodeFiles.length > 0 &&
+                h(
+                  "span",
+                  { className: "selected-count" },
+                  ` (${selectedCodeFiles.length} selected)`
+                )
+            ),
+
+            // Code samples selector (hidden by default)
+            showCodeSamplesSelector &&
+              h(
+                "div",
+                { className: "post-selection-section" },
+                // Username input
+                h(
+                  "div",
+                  { className: "username-section" },
+                  h(
+                    "label",
+                    { htmlFor: this.props.forID + "-username" },
+                    "GitHub Username:"
+                  ),
+                  h("input", {
+                    id: this.props.forID + "-username",
+                    type: "text",
+                    value: username,
+                    onChange: this.handleUsernameChange,
+                    placeholder: "Enter GitHub username",
+                    className: "text-input username-input",
+                  }),
+                  // Include forks checkbox
+                  h(
+                    "label",
+                    { className: "checkbox-label" },
+                    h("input", {
+                      type: "checkbox",
+                      checked: includeForks,
+                      onChange: (e) => {
+                        this.setState(
+                          { includeForks: e.target.checked },
+                          this.loadRepositories
+                        );
+                      },
+                      className: "checkbox-input",
+                    }),
+                    "Include forked repositories"
+                  ),
+                  h(
+                    "button",
+                    {
+                      onClick: this.loadRepositories,
+                      disabled: loadingRepositories || !username.trim(),
+                      className: "sm-flex-button load-repositories",
+                    },
+                    loadingRepositories ? "Loading..." : "Load Repositories"
+                  )
+                ),
+
+                // Repository selector
+                repositories.length > 0 &&
+                  h(
+                    "div",
+                    { className: "repository-section" },
+                    h(
+                      "label",
+                      { htmlFor: this.props.forID + "-repo-select" },
+                      "Select Repository:"
+                    ),
+                    h(
+                      "select",
+                      {
+                        id: this.props.forID + "-repo-select",
+                        value: selectedRepository,
+                        onChange: this.handleRepositoryChange,
+                        className: "dropdown",
+                      },
+                      h("option", { value: "" }, "Choose a repository..."),
+                      repositories.map((repo) => {
+                        const date = new Date(
+                          repo.updatedAt
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        });
+                        const displayText = `${repo.name} (${repo.language}) - Updated ${date}`;
+
+                        return h(
+                          "option",
+                          { key: repo.name, value: repo.name },
+                          displayText
+                        );
+                      })
+                    )
+                  ),
+
+                // Repository content browser
+                selectedRepository &&
+                  h(
+                    "div",
+                    { className: "repository-content-section" },
+                    // Breadcrumb navigation
+                    currentPath &&
+                      h(
+                        "div",
+                        { className: "breadcrumb-section" },
+                        h(
+                          "button",
+                          {
+                            onClick: this.navigateUp,
+                            className: "sm-flex-button go-up-button",
+                          },
+                          "← Go Up"
+                        ),
+                        h(
+                          "div",
+                          { className: "current-path" },
+                          `Current path: ${currentPath || "root"}`
+                        )
+                      ),
+
+                    // File/directory list
+                    h(
+                      "div",
+                      { className: "file-list-section" },
+                      h(
+                        "label",
+                        { htmlFor: this.props.forID + "-file-select" },
+                        "Select up to 10 code files:"
+                      ),
+                      loadingRepositoryContent
+                        ? h(
+                            "div",
+                            { className: "loading-posts" },
+                            "Loading files..."
+                          )
+                        : h(
+                            "div",
+                            { className: "file-list-container" },
+                            // Directories first
+                            repositoryContent
+                              .filter((item) => item.type === "dir")
+                              .map((item) =>
+                                h(
+                                  "div",
+                                  {
+                                    key: item.path,
+                                    className: "file-item directory-item",
+                                    onClick: () =>
+                                      this.navigateToPath(item.path),
+                                  },
+                                  h("span", { className: "file-icon" }, "📁"),
+                                  h(
+                                    "span",
+                                    { className: "file-name" },
+                                    item.name
+                                  )
+                                )
+                              ),
+                            // Then files
+                            h(
+                              "select",
+                              {
+                                id: this.props.forID + "-file-select",
+                                multiple: true,
+                                size: Math.min(
+                                  8,
+                                  repositoryContent.filter(
+                                    (item) => item.type === "file"
+                                  ).length + 1
+                                ),
+                                value: selectedCodeFiles,
+                                onChange: this.handleCodeFileSelection,
+                                className: "dropdown",
+                              },
+                              repositoryContent
+                                .filter((item) => item.type === "file")
+                                .map((item) => {
+                                  const size = ` (${this.formatFileSize(
+                                    item.size
+                                  )})`;
+                                  const displayText = `📄 ${item.name}${size}`;
+
+                                  return h(
+                                    "option",
+                                    { key: item.path, value: item.name },
+                                    displayText
+                                  );
+                                })
+                            )
+                          )
+                    )
+                  ),
+
+                h(
+                  "div",
+                  { className: "post-selection-note" },
+                  "(You can select up to 10 code files. These will be included as code examples in the prompt.)"
+                ),
+                h(
+                  "div",
+                  { className: "cache-buttons" },
+                  h(
+                    "button",
+                    {
+                      onClick: clearCodeSamplesCache,
+                      disabled: isLoading,
+                      className: "sm-flex-button",
+                      title: "Clear cached repositories and file content",
+                    },
+                    "Clear Code Cache"
+                  )
+                )
+              ),
+
+            // LLM Selection and API Key Input
+            h(
+              "div",
+              { className: "api-key-section" },
+              h(
+                "div",
+                { className: "llm-api-row" },
+                h(
+                  "div",
+                  { className: "llm-selector" },
+                  h(
+                    "label",
+                    { htmlFor: this.props.forID + "-llm-select" },
+                    "LLM:"
+                  ),
+                  h(
+                    "select",
+                    {
+                      id: this.props.forID + "-llm-select",
+                      value: selectedLLM,
+                      onChange: this.handleLLMChange,
+                      className: "llm-dropdown",
+                    },
+                    Object.keys(LLM_CHATBOTS).map((llmKey) => {
+                      const llm = LLM_CHATBOTS[llmKey];
+                      return h(
+                        "option",
+                        { key: llmKey, value: llmKey },
+                        llm.name
+                      );
+                    })
+                  )
+                ),
+                h(
+                  "div",
+                  { className: "api-key-input-container" },
+                  h(
+                    "label",
+                    { htmlFor: this.props.forID + "-api-key" },
+                    "API Key:"
+                  ),
+                  h("input", {
+                    id: this.props.forID + "-api-key",
+                    type: "password",
+                    value: apiKey,
+                    onChange: this.handleApiKeyChange,
+                    placeholder: `Enter your ${
+                      LLM_CHATBOTS[selectedLLM]?.name || "LLM"
+                    } API key`,
+                    className: "text-input",
+                  })
+                )
+              )
+            ),
+
+            // Chat Interface
+            h(
+              "div",
+              { className: "chat-container" },
+              // Conversation Header + Fullscreen Button
+              h(
+                "div",
+                { className: "conversation-header" },
+                h(
+                  "span",
+                  { className: "message-count" },
+                  `${messages.length} message${
+                    messages.length !== 1 ? "s" : ""
+                  } in conversation`
+                ),
+                totalTokenCount > 0 &&
+                  h(
+                    "span",
+                    { className: "token-count" },
+                    ` • ${totalTokenCount.toLocaleString()} tokens used`
+                  ),
+                h(
                   "button",
                   {
-                    onClick: this.clearChat,
-                    disabled: isLoading,
-                    className: "clear-button",
+                    onClick: this.toggleFullscreen,
+                    className: "post-toggle-button fullscreen-toggle",
+                    title: isFullscreen
+                      ? "Exit Fullscreen"
+                      : "Enter Fullscreen",
                   },
-                  "Clear Chat"
+                  isFullscreen ? "🗗" : "🗖"
+                )
+              ),
+              // Messages Area
+              h(
+                "div",
+                { className: "messages-container" },
+                messages.length === 0 &&
+                  h(
+                    "div",
+                    { className: "empty-state" },
+                    h(
+                      "p",
+                      {},
+                      "Start a conversation with AI. Enter your API key above and type a message below."
+                    )
+                  ),
+                messages.map((message, index) => {
+                  const isUser = message.role === "user";
+                  return h(
+                    "div",
+                    {
+                      key: index,
+                      className:
+                        "message " +
+                        (isUser ? "user-message" : "assistant-message"),
+                    },
+                    h(
+                      "div",
+                      { className: "message-content" },
+                      isUser
+                        ? message.content
+                        : this.renderSimpleMarkdown(message.content)
+                    )
+                  );
+                }),
+                isLoading &&
+                  h(
+                    "div",
+                    { className: "message assistant-message" },
+                    h(
+                      "div",
+                      { className: "message-content loading" },
+                      "Thinking..."
+                    )
+                  )
+              ),
+
+              // Error Display
+              error && h("div", { className: "error-message" }, error),
+
+              // Input Area
+              h(
+                "div",
+                { className: "input-area" },
+                h("textarea", {
+                  value: currentMessage,
+                  onChange: this.handleMessageChange,
+                  onKeyPress: this.handleKeyPress,
+                  placeholder: "Type your message here...",
+                  disabled: isLoading || !apiKey.trim(),
+                  className: "message-input",
+                }),
+                h(
+                  "div",
+                  { className: "button-group" },
+                  h(
+                    "button",
+                    {
+                      onClick: this.handleSendMessage,
+                      disabled:
+                        isLoading || !currentMessage.trim() || !apiKey.trim(),
+                      className: "send-button",
+                    },
+                    "Send"
+                  ),
+                  h(
+                    "button",
+                    {
+                      onClick: this.clearChat,
+                      disabled: isLoading,
+                      className: "clear-button",
+                    },
+                    "Clear Chat"
+                  )
                 )
               )
             )
-          )
+          ) // close widget-body
         );
       },
     });
