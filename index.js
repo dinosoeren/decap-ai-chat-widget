@@ -1,6 +1,6 @@
 import { GET_INITIAL_STATE, ChatStateManager } from "./lib/state.js";
 import { ChatEventsHandler } from "./lib/events.js";
-import { Renderer } from "./lib/render.js";
+import { Renderer } from "./lib/render/render.js";
 
 (function () {
   let retryCount = 0;
