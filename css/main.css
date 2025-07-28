@@ -552,7 +552,8 @@
 .button-group {
   display: flex;
   gap: 8px;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .send-button,
@@ -594,6 +595,62 @@
   cursor: not-allowed;
 }
 
+/* Clear Chat Dropdown */
+.clear-chat-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.clear-chat-dropdown .clear-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.clear-chat-dropdown .dropdown-content {
+  display: none;
+  position: absolute;
+  bottom: 100%; /* Position above the button */
+  left: 0;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.clear-chat-dropdown .dropdown-content button {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.clear-chat-dropdown .dropdown-content button:hover {
+  background-color: #ddd;
+}
+
+.clear-chat-dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.clear-chat-dropdown .dropdown-content button.clear-all {
+  background-color: #dc3545;
+  color: white;
+}
+
+.clear-chat-dropdown .dropdown-content button.clear-all:hover {
+  background-color: #c82333;
+}
+
 .cache-buttons {
   display: flex;
   gap: 8px;
@@ -632,50 +689,6 @@
 
 .sm-flex-button.load-repositories {
   margin-bottom: 16px;
-}
-
-/* Responsive Design: Medium mobile */
-@media (max-width: 768px) {
-  .message-content {
-    max-width: 90%;
-  }
-}
-
-/* Responsive Design: Small mobile */
-@media (max-width: 380px) {
-  .ai-chat-widget {
-    right: unset;
-  }
-
-  .button-group {
-    flex-direction: column;
-  }
-
-  .send-button,
-  .clear-button {
-    width: 100%;
-  }
-
-  .llm-api-row {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .llm-selector {
-    flex: none;
-    width: 100%;
-  }
-
-  .api-key-container {
-    flex: none;
-    width: 100%;
-  }
-
-  .llm-dropdown,
-  .text-input {
-    width: 100%;
-    box-sizing: border-box;
-  }
 }
 
 /* Code Samples Styles */
@@ -812,8 +825,13 @@
   font-size: 12px;
 }
 
-/* Responsive adjustments for code samples */
+/* Responsive Design: Medium mobile */
 @media (max-width: 768px) {
+  .message-content {
+    max-width: 90%;
+  }
+
+  /* Responsive adjustments for code samples */
   .username-section,
   .repository-section,
   .repository-content-section {
@@ -830,5 +848,42 @@
 
   .file-list-section select {
     font-size: 12px;
+  }
+}
+
+/* Responsive Design: Small mobile */
+@media (max-width: 380px) {
+  .ai-chat-widget {
+    right: unset;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .send-button,
+  .clear-button {
+    width: 100%;
+  }
+
+  .llm-api-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .llm-selector {
+    flex: none;
+    width: 100%;
+  }
+
+  .api-key-container {
+    flex: none;
+    width: 100%;
+  }
+
+  .llm-dropdown,
+  .text-input {
+    width: 100%;
+    box-sizing: border-box;
   }
 }
