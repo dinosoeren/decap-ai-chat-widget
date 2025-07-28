@@ -82,7 +82,7 @@
   z-index: 10000;
 }
 
-.post-toggle-button.fullscreen-toggle {
+.toggle-button.fullscreen-toggle {
   padding: 4px 4px 2px 4px;
 }
 
@@ -243,7 +243,7 @@
   display: none;
 }
 
-.post-toggle-button {
+.toggle-button {
   background: #007cba;
   color: white;
   border: none;
@@ -255,8 +255,13 @@
   transition: background-color 0.2s;
 }
 
-.post-toggle-button:hover {
+.toggle-button:hover {
   background: #005a87;
+}
+
+.toggle-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 
 .selected-count {
@@ -724,11 +729,11 @@
   white-space: nowrap;
 }
 
-.custom-dropdown .dropdown-content button:hover {
+.custom-dropdown .dropdown-content button:not(:disabled):hover {
   background-color: #ddd;
 }
 
-.custom-dropdown:hover .dropdown-content {
+.custom-dropdown:not(.disabled):hover .dropdown-content {
   display: block;
 }
 
@@ -744,8 +749,14 @@
   font-weight: 500;
 }
 
-.custom-dropdown .dropdown-content button.clear-all:hover {
+.custom-dropdown .dropdown-content button.clear-all:not(:disabled):hover {
   background-color: #c82333;
+}
+
+.custom-dropdown .dropdown-content button:disabled,
+.custom-dropdown .dropdown-content button.clear-all:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 .cache-buttons {
