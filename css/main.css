@@ -260,7 +260,7 @@
 
 .selected-count {
   font-size: 12px;
-  background: #fee;
+  background: rgb(244, 255, 238);
   color: #6c757d;
   font-weight: 500;
   padding: 8px;
@@ -532,7 +532,7 @@
 }
 
 .prompt-hint {
-  background-color: #fee;
+  background-color: rgb(244, 255, 238);
   color: black;
   font-size: 12px;
   font-weight: 500;
