@@ -419,6 +419,11 @@
   align-items: flex-start;
 }
 
+.message-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .message-content {
   max-width: 80%;
   padding: 12px 16px;
