@@ -23,6 +23,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+}
+
+.widget-header > span:first-of-type {
+  margin-right: auto;
 }
 
 .widget-body {
@@ -77,10 +82,7 @@
 }
 
 .post-toggle-button.fullscreen-toggle {
-  border: 1px solid white;
-  margin-left: auto;
-  margin-right: 12px;
-  padding: 2px 8px 0 8px;
+  padding: 4px 4px 2px 4px;
 }
 
 /* Tabs */
@@ -248,7 +250,7 @@
 .post-toggle-button {
   background: #007cba;
   color: white;
-  border: 1px solid white;
+  border: none;
   padding: 6px 12px;
   border-radius: 4px;
   font-size: 13px;
