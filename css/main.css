@@ -625,31 +625,34 @@
 .button-group {
   display: flex;
   gap: 8px;
-  justify-content: space-between;
   align-items: center;
 }
 
 .send-button,
-.clear-button {
+.clear-button,
+.new-button {
   padding: 8px 16px;
   border: none;
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
 .send-button {
   background: #007cba;
   color: white;
+  margin-left: auto;
 }
 
 .send-button:hover:not(:disabled) {
   background: #005a87;
 }
 
-.send-button:disabled {
+.send-button:disabled,
+.clear-button:disabled,
+.new-button:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
@@ -663,41 +666,49 @@
   background: #545b62;
 }
 
-.clear-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
+.new-button {
+  background: rgb(224, 255, 207);
+  color: #545b62;
 }
 
-/* Clear Chat Dropdown */
-.clear-chat-dropdown {
+.new-button:hover:not(:disabled) {
+  background: rgb(182, 238, 152);
+}
+
+/* Dropdowns in input area */
+.custom-dropdown {
   position: relative;
   display: inline-block;
   padding-top: 4px;
   top: -2px;
 }
 
-.clear-chat-dropdown .clear-button {
+.custom-dropdown .clear-button {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.clear-chat-dropdown .dropdown-content {
+.custom-dropdown .dropdown-content {
   display: none;
   position: absolute;
   bottom: 100%; /* Position above the button */
-  left: 0;
   background-color: #f1f1f1;
-  min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
   border-radius: 4px;
   overflow: hidden;
 }
 
-.clear-chat-dropdown .dropdown-content button {
+.custom-dropdown .dropdown-content {
+  left: 0;
+  min-width: 220px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.custom-dropdown .dropdown-content button {
   color: black;
-  padding: 12px 16px;
   text-decoration: none;
   display: block;
   width: 100%;
@@ -705,23 +716,35 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 13px;
 }
 
-.clear-chat-dropdown .dropdown-content button:hover {
+.custom-dropdown .dropdown-content button {
+  padding: 10px 14px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.custom-dropdown .dropdown-content button:hover {
   background-color: #ddd;
 }
 
-.clear-chat-dropdown:hover .dropdown-content {
+.custom-dropdown:hover .dropdown-content {
   display: block;
 }
 
-.clear-chat-dropdown .dropdown-content button.clear-all {
-  background-color: #dc3545;
-  color: white;
+.custom-dropdown .dropdown-content hr {
+  margin: 0;
+  border: none;
+  border-top: 1px solid #ddd;
 }
 
-.clear-chat-dropdown .dropdown-content button.clear-all:hover {
+.custom-dropdown .dropdown-content button.clear-all {
+  background-color: #dc3545;
+  color: white;
+  font-weight: 500;
+}
+
+.custom-dropdown .dropdown-content button.clear-all:hover {
   background-color: #c82333;
 }
 
