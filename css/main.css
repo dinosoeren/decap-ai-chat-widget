@@ -237,11 +237,6 @@
   box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
 }
 
-/* Username input with bottom margin */
-.text-input.username-input {
-  margin-bottom: 12px;
-}
-
 /* Post Toggle Button Styles */
 .post-toggle-section {
   display: none;
@@ -265,12 +260,16 @@
 
 .selected-count {
   font-size: 12px;
+  background: #fee;
   color: #6c757d;
   font-weight: 500;
+  padding: 8px;
 }
 
 /* Post Selection Dropdown Styles */
 .post-selection-section {
+  display: grid;
+  gap: 8px;
   padding: 16px;
   background: #f8f9fa;
   border-bottom: 1px solid #e1e5e9;
@@ -280,7 +279,6 @@
 .post-selection-section label {
   display: block;
   font-weight: 600;
-  margin-bottom: 8px;
   color: #333;
   font-size: 14px;
 }
@@ -293,7 +291,6 @@
   font-size: 14px;
   background: #fff;
   box-sizing: border-box;
-  margin-bottom: 8px;
   min-height: 40px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -312,8 +309,6 @@
 .post-selection-note {
   font-size: 12px;
   color: #6c757d;
-  margin-top: 4px;
-  margin-bottom: 0;
 }
 
 .loading-posts {
@@ -518,10 +513,9 @@
 .prompt-hint {
   background-color: #fee;
   color: black;
-  font-size: 11px;
-  font-style: italic;
-  font-weight: bold;
-  padding: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px;
 }
 
 .message-input {
@@ -654,7 +648,6 @@
 .cache-buttons {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
 }
 
 .sm-flex-button {
@@ -692,20 +685,15 @@
 }
 
 /* Code Samples Styles */
-.username-section {
-  margin-bottom: 16px;
-}
-
-.repository-section {
-  margin-bottom: 16px;
-}
-
-.repository-content-section {
-  margin-bottom: 16px;
+.username-section,
+.repository-section,
+.repository-content-section,
+.file-list-section {
+  display: grid;
+  gap: 8px;
 }
 
 .breadcrumb-section {
-  margin-bottom: 12px;
   padding: 8px 12px;
   background: #f8f9fa;
   border-radius: 4px;
@@ -719,10 +707,6 @@
   word-break: break-all;
 }
 
-.file-list-section {
-  margin-bottom: 12px;
-}
-
 .file-list-section select option {
   padding: 4px 8px;
   font-size: 13px;
@@ -732,42 +716,21 @@
   background-color: #f8f9fa;
 }
 
-/* Repository content styling */
-.repository-content-section .dropdown {
-  margin-bottom: 12px;
-}
 .repository-content-section .dropdown option {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 13px;
 }
 
-/* Username input styling */
-.username-section input {
-  margin-bottom: 8px;
-}
-
-.username-section button {
-  margin-bottom: 12px;
-}
-
-/* Repository selector styling */
-.repository-section select {
-  margin-bottom: 8px;
-}
-
-/* File size styling */
 .file-list-section select option {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* File list container and directory items */
 .file-list-container {
   border: 1px solid #d1d5db;
   border-radius: 4px;
   background: #fff;
-  margin-bottom: 8px;
 }
 
 .file-item {
@@ -810,7 +773,6 @@
 /* Checkbox label styling */
 .checkbox-label {
   display: block;
-  margin-bottom: 8px;
   font-size: 13px;
 }
 
@@ -832,12 +794,6 @@
   }
 
   /* Responsive adjustments for code samples */
-  .username-section,
-  .repository-section,
-  .repository-content-section {
-    margin-bottom: 12px;
-  }
-
   .breadcrumb-section {
     padding: 6px 8px;
   }
