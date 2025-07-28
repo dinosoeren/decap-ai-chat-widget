@@ -268,7 +268,7 @@
 }
 
 /* Post Selection Dropdown Styles */
-.post-selection-section {
+.content-selection-section {
   display: grid;
   gap: 8px;
   padding: 16px;
@@ -277,11 +277,19 @@
   margin-bottom: 0;
 }
 
-.post-selection-section label {
+.files-selection {
+  gap: 16px;
+}
+
+.content-selection-section label {
   display: block;
   font-weight: 600;
   color: #333;
   font-size: 14px;
+}
+
+.content-selection-section > label:not(:first-of-type) {
+  margin-top: 8px;
 }
 
 .dropdown {
@@ -307,7 +315,7 @@
   font-size: 14px;
 }
 
-.post-selection-note {
+.content-selection-note {
   font-size: 12px;
   color: #6c757d;
 }
