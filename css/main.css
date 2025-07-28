@@ -338,6 +338,10 @@
   gap: 4px;
 }
 
+.token-count {
+  margin-right: auto;
+}
+
 /* Messages Container */
 .messages-container {
   flex: 1;
