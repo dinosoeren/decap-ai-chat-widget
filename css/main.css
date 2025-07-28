@@ -434,6 +434,11 @@
   word-wrap: break-word;
 }
 
+.message-content ol,
+.message-content ul {
+  padding-left: revert;
+}
+
 .user-message .message-content {
   background: #007cba;
   color: white;
