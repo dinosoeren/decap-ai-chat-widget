@@ -597,6 +597,8 @@
 .clear-chat-dropdown {
   position: relative;
   display: inline-block;
+  padding-top: 4px;
+  top: -2px;
 }
 
 .clear-chat-dropdown .clear-button {
@@ -616,7 +618,6 @@
   z-index: 1;
   border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 4px;
 }
 
 .clear-chat-dropdown .dropdown-content button {
