@@ -10,16 +10,7 @@ A custom widget for Decap CMS that provides an AI chat interface with content-aw
 git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/admin/widgets/ai-chat/
 ```
 
-2. Update `constants.js` with the values for your site:
-
-- `owner` - GitHub username
-- `repo` - site repo on GitHub
-- `branch` - branch to fetch posts from
-- `contentPath` - URL path to posts
-- `postTypes` - posts to fetch within the content path
-- `sitemapXmlPath` - relative path to `sitemap.xml`
-
-3. Add the script and style to your `admin/index.html`:
+2. Add the script and style to your `admin/index.html`:
 
 ```html
 <!-- Content Assistant - AI Chat Widget -->
@@ -27,7 +18,7 @@ git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/
 <link rel="stylesheet" href="widgets/ai-chat/css/main.css" />
 ```
 
-4. Add the widget as a field to the `collections` you want to use it for in Decap config:
+3. Add the widget as a field to the `collections` you want to use it for in Decap config:
 
 ```yaml
 # admin/config.yml
