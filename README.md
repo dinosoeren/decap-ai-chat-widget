@@ -7,7 +7,7 @@ A custom widget for Decap CMS that provides an AI chat interface with content-aw
 1. Add the submodule in your `admin/widgets` directory:
 
 ```bash
-git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/admin/widgets/
+git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/admin/widgets/ai-chat/
 ```
 
 2. Update `constants.js` with the values for your site:
@@ -30,12 +30,12 @@ git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/
 4. Add the widget as a field to the `collections` you want to use it for in Decap config:
 
 ```yaml
-// admin/config.yml
+# admin/config.yml
 collections:
   - name: 'blog'
     fields:
       - { label: 'Title', name: 'title', widget: 'string' }
-      // ... other fields ...
+      # ... other fields ...
       - { label: 'AI Chat', name: 'ai_chat', widget: 'ai-chat', required: false }
       - { label: 'Body', name: 'body', widget: 'markdown' }
 ```
