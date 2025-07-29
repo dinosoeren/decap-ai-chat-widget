@@ -98,6 +98,7 @@
   padding: 12px 16px;
   font-size: 14px;
   font-weight: 500;
+  line-height: 1px;
   color: #6c757d;
   background: transparent;
   border: none;
@@ -131,6 +132,40 @@
 .tab-content.active {
   display: flex;
   flex-direction: column;
+}
+
+/* Settings Tab */
+.settings-form {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+}
+
+.setting-item {
+  display: grid;
+  gap: 8px;
+}
+
+.setting-item label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.setting-item input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.setting-item input:focus {
+  outline: none;
+  border-color: #007cba;
+  box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
 }
 
 /* API Key Section */
