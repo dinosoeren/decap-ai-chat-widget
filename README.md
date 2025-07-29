@@ -61,7 +61,7 @@ The widget is organized into three main tabs: **Chat**, **Posts**, and **Files**
 
 ### Code-Aware Context
 
-- **GitHub Integration**: Browse any public GitHub user's repositories.
+- **GitHub Integration**: Browse any public GitHub user's repositories, and your own private repos.
 - **Repository Navigation**: Navigate through the full directory structure of a selected repository.
 - **Fork Visibility**: Choose to include or exclude forked repositories in your search.
 - **File Selection**: Select up to 10 code files to include as context in your prompt.
@@ -114,7 +114,7 @@ The widget implements intelligent caching to improve performance and reduce API 
 
 The widget uses the GitHub API to fetch repositories and file content. Unauthenticated requests are limited to 60 requests per hour.
 
-API responses are cached locally in your browser for 24-hours to help mitigate these limits. For higher limits, consider using a GitHub personal access token (not yet implemented).
+API responses are cached locally in your browser for 24-hours to help mitigate these limits. For higher limits (up to 5000 requests per hour) and access to your private repositories, use a GitHub personal access token.
 
 ## Troubleshooting
 
