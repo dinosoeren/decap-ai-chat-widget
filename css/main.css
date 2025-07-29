@@ -636,7 +636,6 @@
 .send-button,
 .clear-button,
 .new-button {
-  padding: 8px 16px;
   border: none;
   border-radius: 4px;
   font-size: 14px;
@@ -646,12 +645,18 @@
 }
 
 .send-button {
-  background: #007cba;
-  color: white;
   margin-left: auto;
+  padding: 8px 16px;
 }
 
-.send-button:hover:not(:disabled) {
+.send-button,
+.new-button {
+  background: #007cba;
+  color: white;
+}
+
+.send-button:hover:not(:disabled),
+.new-button:hover:not(:disabled) {
   background: #005a87;
 }
 
@@ -665,6 +670,7 @@
 .clear-button {
   background: #6c757d;
   color: white;
+  padding: 8px 16px;
 }
 
 .clear-button:hover:not(:disabled) {
@@ -672,12 +678,8 @@
 }
 
 .new-button {
-  background: rgb(224, 255, 207);
-  color: #545b62;
-}
-
-.new-button:hover:not(:disabled) {
-  background: rgb(182, 238, 152);
+  padding: 8px;
+  line-height: 0;
 }
 
 /* Dropdowns in input area */
@@ -743,6 +745,16 @@
   border-top: 1px solid #ddd;
 }
 
+.custom-dropdown .dropdown-content button.clear {
+  background-color: #6c757d;
+  color: white;
+  font-weight: 500;
+}
+
+.custom-dropdown .dropdown-content button.clear:not(:disabled):hover {
+  background-color: #545b62;
+}
+
 .custom-dropdown .dropdown-content button.clear-all {
   background-color: #dc3545;
   color: white;
@@ -754,6 +766,7 @@
 }
 
 .custom-dropdown .dropdown-content button:disabled,
+.custom-dropdown .dropdown-content button.clear:disabled,
 .custom-dropdown .dropdown-content button.clear-all:disabled {
   background-color: #ccc;
   cursor: not-allowed;
