@@ -1,6 +1,8 @@
 # Content Assistant - AI Chat Widget for Decap CMS
 
-A custom widget for Decap CMS that provides an AI chat interface with content-aware prompting, chat history, and deep integration with your site's content and code repositories.
+A custom widget for [Decap CMS](https://decapcms.org/) that provides an AI chat interface with content-aware prompting, chat history, and deep integration with your site's content and code repositories.
+
+Features [secure integration](#ai-integration--chat) with chat APIs from Anthropic, Google, and OpenAI, as well as the hundreds of providers and models available on OpenRouter.
 
 ## Quick Setup Guide
 
@@ -10,12 +12,18 @@ A custom widget for Decap CMS that provides an AI chat interface with content-aw
 git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/admin/widgets/ai-chat/
 ```
 
-2. Add the script and style to your `admin/index.html`:
+2. Add the script, style, and dependencies to your `admin/index.html`:
 
 ```html
 <!-- Content Assistant - AI Chat Widget -->
 <script type="module" src="widgets/ai-chat/index.js"></script>
 <link rel="stylesheet" href="widgets/ai-chat/css/main.css" />
+<!-- Crypto functions to encrypt/decrypt API keys. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- Purify unsafe HTML before rendering arbitrary markdown -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js" integrity="sha512-YlctBG9PGZIhh9keoqI3eZkQM9T8QUbiBi7qNYAO/TUEo8jqWX5pLp5+x1cKRQDRzJ/lyGyJ9WUVNIRduxIIFw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- Render markdown in AI chat responses -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/16.1.1/lib/marked.umd.min.js" integrity="sha512-Y+X2CTquZ2g4C2RCgqXQgLJV4I9r2v1CNfOyMj9AXvoQic71ClH4BYjBQl3zZYJu+VRfn+BGz7+GQ3Tu5/f7/A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 ```
 
 3. Add the widget as a field to the `collections` you want to use it for in Decap config:
@@ -33,7 +41,7 @@ collections:
 
 ## Features
 
-The widget is organized into three main tabs: **Chat**, **Posts**, and **Files**.
+The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and **Settings**.
 
 ### UI & Navigation
 
@@ -61,7 +69,10 @@ The widget is organized into three main tabs: **Chat**, **Posts**, and **Files**
 
 ### AI Integration & Chat
 
-- **Multi-Provider Support**: Switch between LLM providers (Gemini, OpenAI).
+- **Secure Integration**: Your API keys never leave your device and stay encrypted in browser storage.
+- **Multi-Provider Support**: Switch between built-in LLM providers (Anthropic, Google, OpenAI).
+  - **OpenRouter Support**: Use any LLM provider and model compatible with the [OpenRouter API](https://openrouter.ai/models).
+  - **Fine-tune Parameters**: Adjust the temperature, max tokens, and system prompt in widget settings.
 - **Context-Aware Prompts**: Automatically injects selected posts, code files, and the meta prompt into your conversation.
 - **Attachment Indicators**: Icons (💡, 📄, 📂) appear on your messages to confirm which context was included.
 - **Token Tracking**: Keep an eye on your token usage with a live counter.
@@ -82,11 +93,12 @@ The widget is organized into three main tabs: **Chat**, **Posts**, and **Files**
 
 ## API Keys
 
+API keys never leave your device. They are encrypted before being cached locally in your browser.
+
+- **Anthropic**: Get your API key from [Anthropic Console](https://console.anthropic.com/settings/keys)
 - **Gemini**: Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 - **OpenAI**: Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-- **Anthropic**: Get your API key from [Anthropic Console](https://console.anthropic.com/settings/keys)
-
-API keys are cached locally in your browser per model.
+- **OpenRouter**: Get your API key from [OpenRouter Settings](https://openrouter.ai/settings/keys)
 
 > **Note**: Never commit API keys to version control.
 
