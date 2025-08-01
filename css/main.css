@@ -588,9 +588,9 @@
   background: #0366d6;
   color: white;
   border: none;
-  padding: 4px 8px;
+  padding: 4px 6px;
   border-radius: 3px;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -603,8 +603,29 @@
   background: #0247b3;
 }
 
+.copy-button .copy-icon {
+  display: block;
+  line-height: 10px;
+}
+.copy-button .copied-icon {
+  display: none;
+  line-height: 10px;
+}
+
 .copy-button.copied {
   background: #28a745;
+}
+
+.copy-button.copied .copy-icon {
+  display: none;
+}
+.copy-button.copied .copied-icon {
+  display: block;
+}
+
+.copy-button svg {
+  width: 12px;
+  height: 12px;
 }
 
 /* Error Message */
@@ -628,12 +649,8 @@
   gap: 8px;
 }
 
-.prompt-hint {
-  background-color: rgb(244, 255, 238);
-  color: black;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 8px;
+.input-area .message-attachments {
+  align-self: flex-start;
 }
 
 .message-input {
@@ -676,6 +693,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
+  line-height: 0;
 }
 
 .send-button {
@@ -713,7 +731,6 @@
 
 .new-button {
   padding: 8px;
-  line-height: 0;
 }
 
 /* Dropdowns in input area */
