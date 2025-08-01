@@ -173,6 +173,9 @@
 
 /* API Key Section */
 .api-key-section {
+  display: flex;
+  gap: 16px;
+  flex-direction: column;
   padding: 16px;
   background: #f8f9fa;
   border-bottom: 1px solid #e1e5e9;
@@ -185,7 +188,7 @@
 }
 
 .llm-selector {
-  flex: 0 0 120px;
+  flex: 1 1 120px;
 }
 
 .api-key-container {
@@ -195,6 +198,7 @@
 
 .api-key-input-container {
   display: flex;
+  gap: 8px;
 }
 
 .api-key-section label {
@@ -406,7 +410,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  z-index: 10;
+  z-index: 100000;
 }
 
 .scroll-button {
