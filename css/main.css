@@ -140,6 +140,7 @@
 /* Settings Tab */
 .settings-form {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
   padding: 16px;
   background: #f8f9fa;
@@ -1054,5 +1055,9 @@
   .text-input {
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .settings-form {
+    grid-template-columns: 1fr;
   }
 }
