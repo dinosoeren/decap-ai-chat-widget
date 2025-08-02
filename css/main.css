@@ -470,6 +470,13 @@
 .message-header {
   display: flex;
   padding-bottom: 4px;
+  justify-content: space-between;
+}
+
+.message-timestamp {
+  font-size: 12px;
+  color: #6c757d;
+  font-style: italic;
 }
 
 .message-content {
