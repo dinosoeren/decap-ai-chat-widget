@@ -73,13 +73,14 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 - **Multi-Provider Support**: Switch between built-in LLM providers (Anthropic, Google, OpenAI).
   - **OpenRouter Support**: Use any LLM provider and model compatible with the [OpenRouter API](https://openrouter.ai/models).
   - **Fine-tune Parameters**: Adjust the temperature, max tokens, and system prompt in widget settings.
+  - **Switch Models**: Continue a conversation with a new model at any time.
 - **Context-Aware Prompts**: Automatically injects selected posts, code files, and the meta prompt into your conversation.
 - **Attachment Indicators**: Icons (💡, 📄, 📂) appear on your messages to confirm which context was included.
 - **Token Tracking**: Keep an eye on your token usage with a live counter.
-- **Chat History**: Conversations are automatically saved per-post.
-  - **History Dropdown**: Restore previous conversations from the current post session.
+- **Chat History**: Conversations are automatically saved and can be restored.
+  - **History Dropdown**: Restore previous conversations from any post.
   - **New Chat**: Start a fresh conversation at any time.
-  - **Clear History**: Erase the chat history for the current post or for all posts entirely.
+  - **Clear History**: Erase the chat history for a single chat or for all chats.
 
 ## Usage
 
@@ -111,7 +112,7 @@ The widget implements intelligent caching to improve performance and reduce API 
   - The active conversation is saved automatically as you chat.
   - Past conversations are stored in the **History** dropdown, scoped to the post you are currently editing.
 - **Settings Cache**: Your selected model, meta prompt, and code selection settings are cached indefinitely.
-- **Cache Clearing**: Use the "Refresh Posts" and "Refresh Repositories" buttons to manually clear the relevant cache and fetch fresh data. The "Erase History" and "Erase All History" buttons manage the chat conversation cache.
+- **Cache Clearing**: Use the "Refresh Posts" and "Refresh Repositories" buttons to manually clear the relevant cache and fetch fresh data. The "Erase Chat" and "Erase All History" buttons manage the chat conversation cache.
 
 ## GitHub API Limits
 

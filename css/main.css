@@ -770,31 +770,68 @@
   min-width: 220px;
   max-height: 200px;
   overflow-y: auto;
+  display: block;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0s 0.5s, visibility 0s 0.5s;
+}
+
+.custom-dropdown:not(.disabled):hover .dropdown-content {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0s 0s, visibility 0s 0s;
+}
+
+.custom-dropdown .dropdown-content > * {
+  border: 1px solid white;
+}
+
+.custom-dropdown .dropdown-content > *:first-child {
+  border-radius: 4px 4px 0 0;
+}
+.custom-dropdown .dropdown-content > *:last-child {
+  border-radius: 0 0 4px 4px;
+}
+
+.custom-dropdown .dropdown-content .history-item {
+  display: flex;
+}
+
+.custom-dropdown .dropdown-content .history-item button {
+  border-left: 2px solid #6c757d;
 }
 
 .custom-dropdown .dropdown-content button {
   color: black;
   text-decoration: none;
-  display: block;
+  align-items: center;
+  flex: 0 1 auto;
+  display: flex;
+  gap: 8px;
   width: 100%;
   text-align: left;
   background: none;
   border: none;
   cursor: pointer;
-}
-
-.custom-dropdown .dropdown-content button {
   padding: 10px 14px;
   font-size: 12px;
   white-space: nowrap;
 }
 
-.custom-dropdown .dropdown-content button:not(:disabled):hover {
-  background-color: #ddd;
+.custom-dropdown .dropdown-content button.delete-button {
+  flex-basis: fit-content;
+  border-radius: 0 4px 4px 0;
 }
 
-.custom-dropdown:not(.disabled):hover .dropdown-content {
-  display: block;
+.custom-dropdown .dropdown-content button svg {
+  width: 13px;
+  height: 13px;
+  position: relative;
+  top: -2px;
+}
+
+.custom-dropdown .dropdown-content button:not(:disabled):hover {
+  background-color: #ddd;
 }
 
 .custom-dropdown .dropdown-content hr {
