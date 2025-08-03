@@ -1,4 +1,5 @@
 import { GET_INITIAL_STATE, ChatStateManager } from "./lib/state.js";
+import { WIDGET_SETTINGS_CONFIG } from "./lib/constants.js";
 import { ChatEventsHandler } from "./lib/events.js";
 import { Renderer } from "./lib/render/render.js";
 
@@ -62,11 +63,14 @@ import { Renderer } from "./lib/render/render.js";
     });
 
     const schema = {
-      properties: {
-        owner: { type: "string" },
-        repo: { type: "string" },
-      },
+      properties: {},
     };
+    // Every settings field can be overriden in the config.yml
+    Object.keys(WIDGET_SETTINGS_CONFIG).forEach((key) => {
+      schema.properties[key] = {
+        type: WIDGET_SETTINGS_CONFIG[key].type,
+      };
+    });
 
     CMS.registerWidget("ai-chat", AiChatControl, null, schema);
   }
