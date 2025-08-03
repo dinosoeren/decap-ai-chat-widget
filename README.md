@@ -35,7 +35,7 @@ git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/
 collections:
   - name: 'blog'
     fields:
-      - { label: 'Assistant', owner: '[GITHUB_USERNAME]', repo: '[GITHUB_SITE_REPO]', name: 'ai_chat', widget: 'ai-chat', required: false }
+      - { label: 'Assistant', owner: '[GITHUB_USERNAME]', repo: '[GITHUB_SITE_REPO]', branch: 'main', name: 'ai_chat', widget: 'ai-chat', required: false }
       # ... other fields ...
       - { label: 'Title', name: 'title', widget: 'string' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
@@ -44,7 +44,9 @@ collections:
 > 💡 **Configuration Tips**:
 > - Setting `required: false` ensures you can still publish content. Otherwise Decap won't let you publish without the `ai_chat` field in your frontmatter.
 >   - **Note**: The chat widget **never** stores anything in your post content or adds any fields to your frontmatter.
-> - The `owner` and `repo` fields refer to the username and repository name where your static site is located.
+> - The `owner`, `repo`, and `branch` fields refer to the username and repository name/branch where your static site is located. These are used to fetch content that you can [inject into your prompts](#meta-prompting--content-examples).
+>   - **Note**: If these fields are not set, the widget will attempt to fetch content using your `sitemap.xml`, but posts fetched from the sitemap won't retain their markdown formatting.
+> - You can optionally provide values in your `config.yaml` for any of the widget [settings fields](lib/constants.js) to override the defaults.
 > - The widget will fail with an error if it's missing a critical dependency like [CryptoJS](https://code.google.com/archive/p/crypto-js/).
 
 ## Features
