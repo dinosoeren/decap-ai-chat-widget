@@ -94,7 +94,9 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
   - **New Chat**: Start a fresh conversation at any time.
   - **Clear History**: Erase the chat history for a single chat or for all chats.
 
-![Click the icon to see your chat history across all posts](./img/history.jpg)
+| **Chat history** | **Settings tab** |
+|-|-|
+| <img src="./img/history.jpg" alt="Click the icon to see your chat history across all posts" height="500"/> | <img src="./img/settings.jpg" alt="Adjust temperature, max tokens and more from the settings tab" height="500"/> |
 
 ## Usage
 
