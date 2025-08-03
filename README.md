@@ -35,11 +35,17 @@ git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/
 collections:
   - name: 'blog'
     fields:
-      - { label: 'AI Chat', owner: '[GITHUB_SITE_REPO_OWNER_USERNAME]', repo: '[GITHUB_SITE_REPO]', name: 'ai_chat', widget: 'ai-chat', required: false }
+      - { label: 'Assistant', owner: '[GITHUB_USERNAME]', repo: '[GITHUB_SITE_REPO]', name: 'ai_chat', widget: 'ai-chat', required: false }
       # ... other fields ...
       - { label: 'Title', name: 'title', widget: 'string' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
 ```
+
+> 💡 **Configuration Tips**:
+> - Setting `required: false` ensures you can still publish content. Otherwise Decap won't let you publish without the `ai_chat` field in your frontmatter.
+>   - **Note**: The chat widget **never** stores anything in your post content or adds any fields to your frontmatter.
+> - The `owner` and `repo` fields refer to the username and repository name where your static site is located.
+> - The widget will fail with an error if it's missing a critical dependency like [CryptoJS](https://code.google.com/archive/p/crypto-js/).
 
 ## Features
 
@@ -70,7 +76,7 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 
 ### Code-Aware Context
 
-- **GitHub Integration**: Browse any public GitHub user's repositories, and your own private repos.
+- **GitHub Integration**: Browse any public GitHub user's repositories, and your own [private repos](#github-api).
 - **Repository Navigation**: Navigate through the full directory structure of a selected repository.
 - **Fork Visibility**: Choose to include or exclude forked repositories in your search.
 - **File Selection**: Select up to 10 code files to include as context in your prompt.
@@ -112,7 +118,7 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 
 ## API Keys
 
-🔐 API keys never leave your device. They are automatically encrypted before being cached locally in your browser, so you only have to enter them once.
+> **Note**: 🔐 API keys never leave your device. They are automatically encrypted before being cached locally in your browser, so you only have to enter them once.
 
 - **Anthropic**: Get your API key from [Anthropic Console](https://console.anthropic.com/settings/keys)
 - **Gemini**: Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
@@ -134,13 +140,13 @@ The widget implements intelligent caching to improve performance and reduce API 
 - **Settings Cache**: Your selected model, meta prompt, and settings are cached indefinitely (clear the input fields or clear browser site storage to remove them).
 - **Cache Clearing**: Use the "Refresh Posts" and "Refresh Repositories" buttons to manually clear the relevant cache and fetch fresh data. The "Erase Chat" and "Erase All History" buttons manage the chat conversation cache.
 
-## GitHub API Limits
+## GitHub API
 
 The widget uses the GitHub API to fetch repositories and file content. Unauthenticated requests are limited to 60 requests per hour.
 
-API responses are cached locally in your browser for 24-hours to help mitigate these limits. For higher limits (up to 5000 requests per hour) and access to your private repositories, use a GitHub personal access token.
+API responses are cached locally in your browser for 24-hours to help mitigate these limits. For higher limits (up to 5000 requests per hour) and access to your private repositories, use a GitHub [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) (PAT).
 
-> **Note**: 🔐 Your PAT automatically gets encrypted before being saved in local storage, so you only have to enter it once.
+> **Note**: 🔐 Your PAT never leaves your device. It automatically gets encrypted before being saved in local storage, so you only have to enter it once.
 
 ## Troubleshooting
 
