@@ -20,7 +20,7 @@ git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/
 <!-- Content Assistant - AI Chat Widget -->
 <script type="module" src="widgets/ai-chat/index.js"></script>
 <link rel="stylesheet" href="widgets/ai-chat/css/main.css" />
-<!-- Crypto functions to encrypt/decrypt API keys. -->
+<!-- Secure functions to encrypt/decrypt API keys. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <!-- Purify unsafe HTML before rendering arbitrary markdown -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js" integrity="sha512-YlctBG9PGZIhh9keoqI3eZkQM9T8QUbiBi7qNYAO/TUEo8jqWX5pLp5+x1cKRQDRzJ/lyGyJ9WUVNIRduxIIFw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -112,7 +112,7 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 
 ## API Keys
 
-API keys never leave your device. They are encrypted before being cached locally in your browser.
+🔐 API keys never leave your device. They are automatically encrypted before being cached locally in your browser, so you only have to enter them once.
 
 - **Anthropic**: Get your API key from [Anthropic Console](https://console.anthropic.com/settings/keys)
 - **Gemini**: Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
@@ -121,17 +121,17 @@ API keys never leave your device. They are encrypted before being cached locally
 
 <img src="./img/api-key.jpg" alt="Click the robot icon to enter an API key for any model provider" height="500"/>
 
-> **Note**: Never commit API keys to version control.
+> **Note**: Never commit API keys to version control. Do not put them in your `config.yml`.
 
 ## Caching
 
 The widget implements intelligent caching to improve performance and reduce API calls.
 
-- **Post & Repository Cache**: Post lists, post content, repository lists, and file contents are cached for **24 hours**.
+- **Post & Repository Cache**: Post lists, post content, repository lists, and repository contents are cached for **24 hours**.
 - **Chat Cache**:
   - The active conversation is saved automatically as you chat.
-  - Past conversations are stored in the **History** dropdown, scoped to the post you are currently editing.
-- **Settings Cache**: Your selected model, meta prompt, and code selection settings are cached indefinitely.
+  - Past conversations are stored in the **History** dropdown, and are available on all post types that have the `widget: 'ai-chat'` field in your `config.yml`.
+- **Settings Cache**: Your selected model, meta prompt, and settings are cached indefinitely (clear the input fields or clear browser site storage to remove them).
 - **Cache Clearing**: Use the "Refresh Posts" and "Refresh Repositories" buttons to manually clear the relevant cache and fetch fresh data. The "Erase Chat" and "Erase All History" buttons manage the chat conversation cache.
 
 ## GitHub API Limits
@@ -139,6 +139,8 @@ The widget implements intelligent caching to improve performance and reduce API 
 The widget uses the GitHub API to fetch repositories and file content. Unauthenticated requests are limited to 60 requests per hour.
 
 API responses are cached locally in your browser for 24-hours to help mitigate these limits. For higher limits (up to 5000 requests per hour) and access to your private repositories, use a GitHub personal access token.
+
+> **Note**: 🔐 Your PAT automatically gets encrypted before being saved in local storage, so you only have to enter it once.
 
 ## Troubleshooting
 
