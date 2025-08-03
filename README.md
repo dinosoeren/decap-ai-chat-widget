@@ -55,8 +55,8 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 
 <div class="grid" markdown>
 
-![Fullscreen mode lets you focus on the chat](./img/fullscreen.jpg)
-![Collapsed mode lets you focus on your content](./img/collapsed.jpg)
+![Fullscreen mode lets you focus on the chat](./img/fullscreen.jpg){: style="height:400px"}
+![Collapsed mode lets you focus on your content](./img/collapsed.jpg){: style="height:400px"}
 
 </div>
 
@@ -67,7 +67,7 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 - **Dynamic Loading**: Automatically loads post content from the GitHub API with a sitemap fallback.
 - **Cache Refresh**: Use the "Refresh Posts" button to clear the local cache and fetch the latest post list.
 
-![The posts tab lets you supply a meta-prompt and content examples](./img/posts-tab.jpg)
+![The posts tab lets you supply a meta-prompt and content examples](./img/posts-tab.jpg){: style="height:400px"}
 
 ### Code-Aware Context
 
@@ -78,7 +78,7 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 - **File Metadata**: The browser displays file sizes to help you make informed selections.
 - **Cache Refresh**: Use the "Refresh Repositories" button to clear cached repository and file data.
 
-![The files tab lets you supply code from any GitHub repo](./img/files-tab.jpg)
+![The files tab lets you supply code from any GitHub repo](./img/files-tab.jpg){: style="height:400px"}
 
 ### AI Integration & Chat
 
@@ -107,7 +107,7 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
     - Enter your API key (it gets cached for future use).
     - Start your conversation!
 
-![Loading a response can take a while if you attach a lot of files](./img/thinking.jpg)
+![Loading a response can take a while if you attach a lot of files](./img/thinking.jpg){: style="height:400px"}
 
 ## API Keys
 
@@ -118,7 +118,7 @@ API keys never leave your device. They are encrypted before being cached locally
 - **OpenAI**: Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
 - **OpenRouter**: Get your API key from [OpenRouter Settings](https://openrouter.ai/settings/keys)
 
-![Click the robot icon to enter an API key for any model provider](./img/api-key.jpg)
+![Click the robot icon to enter an API key for any model provider](./img/api-key.jpg){: style="height:400px"}
 
 > **Note**: Never commit API keys to version control.
 
