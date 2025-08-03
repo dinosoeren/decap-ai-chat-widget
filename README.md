@@ -53,10 +53,8 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 - **Keyboard Navigation**: Use the up/down arrow keys to quickly navigate between messages in the chat view.
 - **Message Actions**: Copy AI responses and code blocks to your clipboard with a single click.
 
-<div class="grid" markdown>
-
-![Fullscreen mode lets you focus on the chat](./img/fullscreen.jpg){: style="height:400px"}
-![Collapsed mode lets you focus on your content](./img/collapsed.jpg){: style="height:400px"}
+<img src="./img/fullscreen.jpg" alt="Fullscreen mode lets you focus on the chat" height="400"/>
+<img src="./img/collapsed.jpg" alt="Collapsed mode lets you focus on your content" height="400"/>
 
 </div>
 
@@ -67,7 +65,7 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 - **Dynamic Loading**: Automatically loads post content from the GitHub API with a sitemap fallback.
 - **Cache Refresh**: Use the "Refresh Posts" button to clear the local cache and fetch the latest post list.
 
-![The posts tab lets you supply a meta-prompt and content examples](./img/posts-tab.jpg){: style="height:400px"}
+<img src="./img/posts-tab.jpg" alt="The posts tab lets you supply a meta-prompt and content examples" height="400"/>
 
 ### Code-Aware Context
 
@@ -78,7 +76,7 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 - **File Metadata**: The browser displays file sizes to help you make informed selections.
 - **Cache Refresh**: Use the "Refresh Repositories" button to clear cached repository and file data.
 
-![The files tab lets you supply code from any GitHub repo](./img/files-tab.jpg){: style="height:400px"}
+<img src="./img/files-tab.jpg" alt="The files tab lets you supply code from any GitHub repo" height="400"/>
 
 ### AI Integration & Chat
 
@@ -107,7 +105,7 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
     - Enter your API key (it gets cached for future use).
     - Start your conversation!
 
-![Loading a response can take a while if you attach a lot of files](./img/thinking.jpg){: style="height:400px"}
+<img src="./img/thinking.jpg" alt="Loading a response can take a while if you attach a lot of files" height="400"/>
 
 ## API Keys
 
@@ -118,7 +116,7 @@ API keys never leave your device. They are encrypted before being cached locally
 - **OpenAI**: Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
 - **OpenRouter**: Get your API key from [OpenRouter Settings](https://openrouter.ai/settings/keys)
 
-![Click the robot icon to enter an API key for any model provider](./img/api-key.jpg){: style="height:400px"}
+<img src="./img/api-key.jpg" alt="Click the robot icon to enter an API key for any model provider" height="400"/>
 
 > **Note**: Never commit API keys to version control.
 
