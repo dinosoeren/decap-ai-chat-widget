@@ -1,8 +1,10 @@
-# Content Assistant - AI Chat Widget for Decap CMS
+# Content Assistant - Responsive AI Chat Widget for Decap CMS
 
 A custom widget for [Decap CMS](https://decapcms.org/) that provides an AI chat interface with content-aware prompting, chat history, and deep integration with your site's content and code repositories.
 
 Features [secure integration](#ai-integration--chat) with chat APIs from Anthropic, Google, and OpenAI, as well as the hundreds of providers and models available on OpenRouter.
+
+![Chatting with Deepseek R1](./img/chat-tab.jpg)
 
 ## Quick Setup Guide
 
@@ -51,12 +53,17 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 - **Keyboard Navigation**: Use the up/down arrow keys to quickly navigate between messages in the chat view.
 - **Message Actions**: Copy AI responses and code blocks to your clipboard with a single click.
 
+![Fullscreen mode lets you focus on the chat](./img/fullscreen.jpg)
+![Collapsed mode lets you focus on your content](./img/collapsed.jpg)
+
 ### Meta Prompting & Content Examples
 
 - **Meta Prompt**: Define a persistent writing style guide or instruction set that gets automatically injected into the first message of a new conversation.
 - **Post Selection**: Browse and select up to 3 posts from your site to use as writing examples.
 - **Dynamic Loading**: Automatically loads post content from the GitHub API with a sitemap fallback.
 - **Cache Refresh**: Use the "Refresh Posts" button to clear the local cache and fetch the latest post list.
+
+![The posts tab lets you supply a meta-prompt and content examples](./img/posts-tab.jpg)
 
 ### Code-Aware Context
 
@@ -66,6 +73,8 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 - **File Selection**: Select up to 10 code files to include as context in your prompt.
 - **File Metadata**: The browser displays file sizes to help you make informed selections.
 - **Cache Refresh**: Use the "Refresh Repositories" button to clear cached repository and file data.
+
+![The files tab lets you supply code from any GitHub repo](./img/files-tab.jpg)
 
 ### AI Integration & Chat
 
@@ -82,6 +91,8 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
   - **New Chat**: Start a fresh conversation at any time.
   - **Clear History**: Erase the chat history for a single chat or for all chats.
 
+![Click the icon to see your chat history across all posts](./img/history.jpg)
+
 ## Usage
 
 1.  **Configure Context (Optional)**:
@@ -92,6 +103,8 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
     - Enter your API key (it gets cached for future use).
     - Start your conversation!
 
+![Loading a response can take a while if you attach a lot of files](./img/thinking.jpg)
+
 ## API Keys
 
 API keys never leave your device. They are encrypted before being cached locally in your browser.
@@ -100,6 +113,8 @@ API keys never leave your device. They are encrypted before being cached locally
 - **Gemini**: Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 - **OpenAI**: Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
 - **OpenRouter**: Get your API key from [OpenRouter Settings](https://openrouter.ai/settings/keys)
+
+![Click the robot icon to enter an API key for any model provider](./img/api-key.jpg)
 
 > **Note**: Never commit API keys to version control.
 
