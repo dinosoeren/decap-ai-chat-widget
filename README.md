@@ -53,8 +53,12 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 - **Keyboard Navigation**: Use the up/down arrow keys to quickly navigate between messages in the chat view.
 - **Message Actions**: Copy AI responses and code blocks to your clipboard with a single click.
 
+<div class="grid" markdown>
+
 ![Fullscreen mode lets you focus on the chat](./img/fullscreen.jpg)
 ![Collapsed mode lets you focus on your content](./img/collapsed.jpg)
+
+</div>
 
 ### Meta Prompting & Content Examples
 
