@@ -1022,6 +1022,10 @@
 
 /* Responsive Design: Medium mobile */
 @media (max-width: 768px) {
+  .ai-chat-widget.collapsed {
+    width: max-content;
+  }
+
   .message-content {
     max-width: 90%;
   }
@@ -1041,30 +1045,9 @@
 }
 
 /* Responsive Design: Small mobile */
-@media (max-width: 380px) {
-  .ai-chat-widget {
-    right: unset;
-  }
-
-  .llm-api-row {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .llm-selector {
-    flex: none;
-    width: 100%;
-  }
-
-  .api-key-container {
-    flex: none;
-    width: 100%;
-  }
-
-  .llm-dropdown,
-  .text-input {
-    width: 100%;
-    box-sizing: border-box;
+@media (max-width: 420px) {
+  .ai-chat-widget.collapsed .widget-header span:first-of-type {
+    display: none;
   }
 
   .settings-form {
