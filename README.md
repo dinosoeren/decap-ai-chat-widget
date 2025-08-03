@@ -35,9 +35,9 @@ git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/
 collections:
   - name: 'blog'
     fields:
-      - { label: 'Title', name: 'title', widget: 'string' }
+      - { label: 'AI Chat', owner: '[GITHUB_SITE_REPO_OWNER_USERNAME]', repo: '[GITHUB_SITE_REPO]', name: 'ai_chat', widget: 'ai-chat', required: false }
       # ... other fields ...
-      - { label: 'AI Chat', name: 'ai_chat', widget: 'ai-chat', required: false }
+      - { label: 'Title', name: 'title', widget: 'string' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
 ```
 

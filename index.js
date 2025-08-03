@@ -52,7 +52,10 @@ import { Renderer } from "./lib/render/render.js";
     });
 
     const schema = {
-      properties: {},
+      properties: {
+        owner: { type: "string" },
+        repo: { type: "string" },
+      },
     };
 
     CMS.registerWidget("ai-chat", AiChatControl, null, schema);
