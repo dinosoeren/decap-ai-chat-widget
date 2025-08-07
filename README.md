@@ -1,3 +1,7 @@
+![NPM License](https://img.shields.io/npm/l/decap-cms-widget-ai-chat)
+[![NPM Version](https://img.shields.io/npm/v/decap-cms-widget-ai-chat)](https://www.npmjs.com/package/decap-cms-widget-ai-chat)
+![Node Version](https://img.shields.io/node/v-lts/decap-cms-widget-ai-chat)
+
 # Content Assistant - Responsive AI Chat Widget for Decap CMS
 
 A custom widget for [Decap CMS](https://decapcms.org/) that provides an AI chat interface with content-aware prompting, chat history, and deep integration with your site's content and code repositories.
@@ -8,27 +12,16 @@ Features [secure integration](#ai-integration--chat) with chat APIs from Anthrop
 
 ## Quick Setup Guide
 
-1. Add the submodule in your `admin/widgets` directory:
-
-```bash
-git submodule add https://github.com/dinosoeren/decap-ai-chat-widget.git static/admin/widgets/ai-chat/
-```
-
-2. Add the script, style, and dependencies to your `admin/index.html`:
+1. Add the below scripts to your `admin/index.html`:
 
 ```html
 <!-- Content Assistant - AI Chat Widget -->
-<script type="module" src="widgets/ai-chat/index.js"></script>
-<link rel="stylesheet" href="widgets/ai-chat/css/main.css" />
-<!-- Secure functions to encrypt/decrypt API keys. -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<!-- Purify unsafe HTML before rendering arbitrary markdown -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js" integrity="sha512-YlctBG9PGZIhh9keoqI3eZkQM9T8QUbiBi7qNYAO/TUEo8jqWX5pLp5+x1cKRQDRzJ/lyGyJ9WUVNIRduxIIFw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<!-- Render markdown in AI chat responses -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/16.1.1/lib/marked.umd.min.js" integrity="sha512-Y+X2CTquZ2g4C2RCgqXQgLJV4I9r2v1CNfOyMj9AXvoQic71ClH4BYjBQl3zZYJu+VRfn+BGz7+GQ3Tu5/f7/A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script type="text/javascript" src="https://unpkg.com/decap-cms-widget-ai-chat@1.0.0/dist/main.js" integrity="sha384-/s+LkJSAVZkMICkNvBrI1Ims+iwqUCUL9ijFXKBmm1miABVEbPcg8tm7iHrYvis/" crossorigin="anonymous"></script>
+
+<script>CMS.registerWidget("ai-chat", window.AiChatControl, null, window.AiChatSchema);</script>
 ```
 
-3. Add the widget as a field to the `collections` you want to use it for in Decap config:
+2. Add the widget as a field to the `collections` you want to use it for in Decap config:
 
 ```yaml
 # admin/config.yml
@@ -47,7 +40,6 @@ collections:
 > - The `owner`, `repo`, and `branch` fields refer to the username and repository name/branch where your static site is located. These are used to fetch content that you can [inject into your prompts](#meta-prompting--content-examples).
 >   - **Note**: If these fields are not set, the widget will attempt to fetch content using your `sitemap.xml`, but posts fetched from the sitemap won't retain their markdown formatting.
 > - You can optionally provide values in your `config.yaml` for any of the widget [settings fields](lib/constants.js) to override the defaults.
-> - The widget will fail with an error if it's missing a critical dependency like [CryptoJS](https://code.google.com/archive/p/crypto-js/).
 
 ## Features
 
