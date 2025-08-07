@@ -1,6 +1,6 @@
 {
   "name": "decap-cms-widget-ai-chat",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Content assistant (AI Chat) widget for Decap CMS with content-aware prompting, chat history, secure key encryption, and support for hundreds of models on OpenRouter.",
   "main": "dist/main.js",
   "repository": {
