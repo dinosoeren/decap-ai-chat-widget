@@ -1,3 +1,6 @@
+import AES from "crypto-js/aes";
+import { enc } from "crypto-js";
+
 const CACHED_POSTS_EXPIRY_HOURS = 24;
 const CACHE_KEYS = {
   WIDGET_SETTINGS: "ai_chat_widget_settings",
@@ -30,15 +33,13 @@ function getEncryptionKey() {
 }
 
 function encrypt(text) {
-  if (typeof CryptoJS === "undefined" || !text) {
-    console.warn(
-      "CryptoJS not available or text is empty, skipping encryption."
-    );
+  if (!text) {
+    console.warn("Text is empty, skipping encryption.");
     return text;
   }
   try {
     const key = getEncryptionKey();
-    return CryptoJS.AES.encrypt(text, key).toString();
+    return AES.encrypt(text, key).toString();
   } catch (error) {
     console.warn("Encryption failed:", error);
     return text; // Return original text on error
@@ -46,16 +47,14 @@ function encrypt(text) {
 }
 
 function decrypt(encryptedText) {
-  if (typeof CryptoJS === "undefined" || !encryptedText) {
-    console.warn(
-      "CryptoJS not available or encrypted text is empty, skipping decryption."
-    );
+  if (!encryptedText) {
+    console.warn("Encrypted text is empty, skipping decryption.");
     return encryptedText;
   }
   try {
     const key = getEncryptionKey();
-    const bytes = CryptoJS.AES.decrypt(encryptedText, key);
-    return bytes.toString(CryptoJS.enc.Utf8);
+    const bytes = AES.decrypt(encryptedText, key);
+    return bytes.toString(enc.Utf8);
   } catch (error) {
     console.warn("Decryption failed, returning original text:", error);
     return encryptedText; // Return original if decryption fails (e.g., not encrypted or wrong key)

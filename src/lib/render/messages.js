@@ -1,3 +1,6 @@
+import { marked } from "marked";
+import DOMPurify from "dompurify";
+
 import { iconClipboardFill, iconClipboardCheckFill } from "./icons.js";
 
 export function renderSimpleMarkdown(content) {
