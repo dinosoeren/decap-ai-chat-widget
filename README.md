@@ -39,7 +39,7 @@ collections:
 >   - **Note**: The chat widget **never** stores anything in your post content or adds any fields to your frontmatter.
 > - The `owner`, `repo`, and `branch` fields refer to the username and repository name/branch where your static site is located. These are used to fetch content that you can [inject into your prompts](#meta-prompting--content-examples).
 >   - **Note**: If these fields are not set, the widget will attempt to fetch content using your `sitemap.xml`, but posts fetched from the sitemap won't retain their markdown formatting.
-> - You can optionally provide values in your `config.yaml` for any of the widget [settings fields](lib/constants.js) to override the defaults.
+> - You can optionally provide values in your `config.yml` for any of the widget [settings fields](src/lib/constants.js) to override the defaults.
 
 ## Features
 
@@ -112,7 +112,7 @@ The widget is organized into four main tabs: **Chat**, **Posts**, **Files**, and
 
 ## API Keys
 
-> **Note**: 🔐 API keys never leave your device. They are automatically encrypted before being cached locally in your browser, so you only have to enter them once.
+> **Note**: 🔐 API keys never leave your device. They are automatically encrypted with AES before being cached locally in your browser, so you only have to enter them once.
 
 - **Anthropic**: Get your API key from [Anthropic Console](https://console.anthropic.com/settings/keys)
 - **Gemini**: Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
@@ -140,7 +140,7 @@ The widget uses the GitHub API to fetch repositories and file content. Unauthent
 
 API responses are cached locally in your browser for 24-hours to help mitigate these limits. For higher limits (up to 5000 requests per hour) and access to your private repositories, use a GitHub [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) (PAT).
 
-> **Note**: 🔐 Your PAT never leaves your device. It automatically gets encrypted before being saved in local storage, so you only have to enter it once.
+> **Note**: 🔐 Your PAT never leaves your device. It automatically gets encrypted with AES before being saved in local storage, so you only have to enter it once.
 
 ## Troubleshooting
 
